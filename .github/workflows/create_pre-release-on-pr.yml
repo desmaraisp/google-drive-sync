@@ -18,8 +18,7 @@ jobs:
 
     - name: restore and build
       run: |
-        dotnet restore
-        dotnet build .\src\KPSyncForDrive.csproj --no-restore
+        dotnet build .\src\KPSyncForDrive.csproj
     
     - name: publish
       run: dotnet publish .\src\KPSyncForDrive.csproj
