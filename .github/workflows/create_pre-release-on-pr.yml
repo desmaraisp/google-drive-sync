@@ -37,6 +37,8 @@ jobs:
       uses: actions/upload-artifact@v4
       id: plgx-upload
       with:
+        name: plgx-artifact
+        retention-days: 15
         path: dist/*.plgx
         if-no-files-found: error
 
@@ -44,6 +46,8 @@ jobs:
       uses: actions/upload-artifact@v4
       id: zip-upload
       with:
+        name: zip-artifact
+        retention-days: 15
         path: dist/*.zip
         if-no-files-found: error
 
@@ -51,7 +55,7 @@ jobs:
       env:
         PR_NUMBER: ${{ github.event.number }}
         PR_NOTES: |
-          Build artifacts:
+          Build artifacts (expire in 15 days):
           | Name | Link |
           |------|------|
           | PLGX | ${{ steps.plgx-upload.outputs.artifact-url }} |
