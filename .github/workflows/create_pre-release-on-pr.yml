@@ -19,10 +19,10 @@ jobs:
     - name: restore and build
       run: |
         dotnet restore
-        dotnet build --no-restore
+        dotnet build .\src\KPSyncForDrive.csproj --no-restore
     
     - name: publish
-      run: dotnet publish
+      run: dotnet publish .\src\KPSyncForDrive.csproj
 
     - name: zip results
       env:
