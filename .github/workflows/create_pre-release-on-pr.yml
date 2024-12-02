@@ -1,0 +1,78 @@
+name: Create pre-release on PR
+
+on: pull_request
+
+
+jobs:
+  create-prerelease:
+    runs-on: windows-latest
+    permissions: 
+      pull-requests: write
+
+    steps:
+    - uses: actions/checkout@v3
+  
+    - uses: microsoft/setup-msbuild@v2
+
+    - name: publish
+      run: |
+        msbuild -t:restore,build -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
+          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
+          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}' `
+          -p:'CompileTimeConfig_PublicClientSecret=${{vars.PublicClientSecret }}'
+
+        # The publish needs to be run separately, since the PLGX build task seems to not run on first build
+        msbuild -t:publish -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
+          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
+          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}' `
+          -p:'CompileTimeConfig_PublicClientSecret=${{vars.PublicClientSecret }}'
+
+
+    - name: zip results
+      env:
+        PR_NUMBER: ${{ github.event.number }}
+      shell: pwsh
+      run: |
+        $randString = -join ((48..57) + (97..122) | Get-Random -Count 10 | % {[char]$_})
+        mkdir ./dist
+        move-item "./src/bin/Any Cpu/Release/net48/*.plgx" -Destination ./dist/pr-$ENV:PR_NUMBER.$randString.plgx
+        Compress-Archive -Path "./src/bin/Any Cpu/Release/net48/publish/*" -DestinationPath ./dist/pr-$ENV:PR_NUMBER.$randString.zip -CompressionLevel Optimal -Force
+        [System.IO.FileSystemInfo[]]$files = Get-ChildItem ./dist/
+        Write-Host "$($files.Count) files found in dist directory:"
+        $files
+
+    - name: Upload plgx Artifact
+      uses: actions/upload-artifact@v4
+      id: plgx-upload
+      with:
+        name: plgx-artifact
+        retention-days: 15
+        path: ./dist/*.plgx
+        if-no-files-found: error
+
+    - name: Upload zipped Artifacts
+      uses: actions/upload-artifact@v4
+      id: zip-upload
+      with:
+        name: zip-artifact
+        retention-days: 15
+        path: ./dist/*.zip
+        if-no-files-found: error
+
+    - uses: actions/github-script@v6
+      env:
+        PR_NUMBER: ${{ github.event.number }}
+        PR_NOTES: |
+          Build artifacts (expire in 15 days):
+          | Name | Link |
+          |------|------|
+          | PLGX | ${{ steps.plgx-upload.outputs.artifact-url }} |
+          | zip | ${{ steps.zip-upload.outputs.artifact-url }} |
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: process.env.PR_NUMBER,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: process.env.PR_NOTES
+          })
