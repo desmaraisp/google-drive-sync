@@ -179,3 +179,4 @@ kp/
 
 # Local VS settings
 /src/Properties/launchSettings.json
+/.idea
