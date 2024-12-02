@@ -21,7 +21,7 @@ jobs:
         dotnet build .\src\KPSyncForDrive.csproj
     
     - name: publish
-      run: dotnet publish .\src\KPSyncForDrive.csproj
+      run: dotnet publish .\src\KPSyncForDrive.csproj -c Release
 
     - name: zip results
       env:
