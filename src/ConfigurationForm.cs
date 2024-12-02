@@ -637,5 +637,10 @@ namespace KPSyncForDrive
         {
             m_grpDriveAuth.Enabled = m_chkUseLegacyCreds.Checked;
         }
+        
+        private async void HandleAuthorizeFilesAction(object sender, EventArgs e)
+        {
+            await m_data.PickFile();
+        }
     }
 }

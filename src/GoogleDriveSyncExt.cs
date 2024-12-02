@@ -33,6 +33,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using FilePicker;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Requests;
@@ -54,6 +55,8 @@ using KeePassLib.Delegates;
 using KeePassLib.Interfaces;
 using KeePassLib.Security;
 using KeePassLib.Serialization;
+using RazorLight;
+using CompileTimeConfigPublicMembers;
 using File = System.IO.File;
 using GDriveFile = Google.Apis.Drive.v3.Data.File;
 
@@ -91,6 +94,11 @@ namespace KPSyncForDrive
         private ToolStripMenuItem m_tsmiUpload = null;
         private ToolStripMenuItem m_tsmiDownload = null;
         private ToolStripMenuItem m_tsmiConfigure = null;
+        private RazorLightEngine _engine;
+        private IFilePicker _filePicker;
+        private FilePickerForm _pickerForm;
+        private DatabaseContext _dbContext;
+        private ICompileTimeConfigAccessor<PluginStaticConfiguration> _staticPluginOptions;
 
         GDriveFile.ContentHintsData m_contentInfo;
 
@@ -135,6 +143,12 @@ namespace KPSyncForDrive
             m_host = host;
 
             PluginConfig appDefaults = PluginConfig.InitDefault(host);
+            
+            _engine = new RazorLightEngineBuilder().Build();
+            _filePicker = new FilePicker.FilePicker(Log.Default, _engine);
+            _dbContext = new DatabaseContext(host.Database);
+            _staticPluginOptions = new OptionsAccessor();
+            _pickerForm = new FilePickerForm(host, _filePicker, Log.Default, _dbContext, _staticPluginOptions);
 
             // Get a reference to the 'Tools' menu item container
             ToolStripItemCollection tsMenu = m_host.MainWindow.ToolsMenu.DropDownItems;
@@ -1694,8 +1708,7 @@ namespace KPSyncForDrive
             List<EntryConfiguration> acctList = db.GetLegacyAccounts();
             
             // Create a "presentation" object for dialog data binding.
-            ConfigurationFormData options;
-            options = new ConfigurationFormData(acctList, GetColors, db);
+            var options = new ConfigurationFormData(acctList, GetColors, GetFile, db);
             ConfigurationForm optionsForm = new ConfigurationForm(options)
             {
                 DatabaseFilePath = db.IOConnectionInfo.Path,
@@ -1965,6 +1978,13 @@ namespace KPSyncForDrive
             }
 
             return true;
+        }
+
+        async Task<FilePick> GetFile(SyncConfiguration authData)
+        {
+            var res = await GetAuthorization(m_host, _dbContext, authData);
+            
+            return await _pickerForm.SelectFile(res.Token.AccessToken, authData, CancellationToken.None);
         }
     }
 

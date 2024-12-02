@@ -72,6 +72,8 @@
             this.m_grpDriveAuth = new System.Windows.Forms.GroupBox();
             this.m_chkUseLegacyCreds = new System.Windows.Forms.CheckBox();
             this.m_chkDriveScope = new System.Windows.Forms.CheckBox();
+            this.AuthorizeFiles_label = new System.Windows.Forms.Label();
+            this.AuthorizeFiles_btn = new System.Windows.Forms.Button();
             this.m_lnkGoogle = new System.Windows.Forms.LinkLabel();
             this.m_lnkHelp = new System.Windows.Forms.LinkLabel();
             this.m_lblClientSecret = new System.Windows.Forms.Label();
@@ -87,6 +89,7 @@
             this.m_txtFolder = new System.Windows.Forms.TextBox();
             this.m_lblFolder = new System.Windows.Forms.Label();
             this.m_tabMain = new System.Windows.Forms.TabControl();
+            this.AuthorizeFiles_tooltip = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).BeginInit();
             this.m_tabOptions.SuspendLayout();
             this.m_grpAuthTokenSecurityDefaults.SuspendLayout();
@@ -512,6 +515,8 @@
             // 
             this.m_grpDriveAuth.Controls.Add(this.m_chkUseLegacyCreds);
             this.m_grpDriveAuth.Controls.Add(this.m_chkDriveScope);
+            this.m_grpDriveAuth.Controls.Add(this.AuthorizeFiles_label);
+            this.m_grpDriveAuth.Controls.Add(this.AuthorizeFiles_btn);
             this.m_grpDriveAuth.Controls.Add(this.m_lnkGoogle);
             this.m_grpDriveAuth.Controls.Add(this.m_lnkHelp);
             this.m_grpDriveAuth.Controls.Add(this.m_lblClientSecret);
@@ -526,6 +531,7 @@
             this.m_grpDriveAuth.TabStop = false;
             // 
             // m_chkUseLegacyCreds
+            // AuthorizeFiles_label
             // 
             this.m_chkUseLegacyCreds.AutoSize = true;
             this.m_chkUseLegacyCreds.Location = new System.Drawing.Point(6, 0);
@@ -535,8 +541,15 @@
             this.m_chkUseLegacyCreds.Text = "Btn_UseLegacyCreds";
             this.m_chkUseLegacyCreds.UseVisualStyleBackColor = true;
             this.m_chkUseLegacyCreds.CheckedChanged += new System.EventHandler(this.m_chkUseLegacyCreds_CheckedChanged);
+            this.AuthorizeFiles_label.Location = new System.Drawing.Point(24, 37);
+            this.AuthorizeFiles_label.Name = "AuthorizeFiles_label";
+            this.AuthorizeFiles_label.Size = new System.Drawing.Size(139, 31);
+            this.AuthorizeFiles_label.TabIndex = 8;
+            this.AuthorizeFiles_label.Text = "AuthorizeFiles_label";
+            this.AuthorizeFiles_label.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // m_chkDriveScope
+            // AuthorizeFiles_btn
             // 
             this.m_chkDriveScope.AutoSize = true;
             this.m_chkDriveScope.Location = new System.Drawing.Point(131, 48);
@@ -545,6 +558,14 @@
             this.m_chkDriveScope.TabIndex = 2;
             this.m_chkDriveScope.Text = "Lbl_UseAppFileApiScope";
             this.m_chkDriveScope.UseVisualStyleBackColor = true;
+            this.AuthorizeFiles_btn.Location = new System.Drawing.Point(175, 37);
+            this.AuthorizeFiles_btn.Name = "AuthorizeFiles_btn";
+            this.AuthorizeFiles_btn.Size = new System.Drawing.Size(136, 31);
+            this.AuthorizeFiles_btn.TabIndex = 7;
+            this.AuthorizeFiles_btn.Text = "AuthorizeFiles_btn";
+            this.AuthorizeFiles_tooltip.SetToolTip(this.AuthorizeFiles_btn, "AuthorizeFiles_tooltip");
+            this.AuthorizeFiles_btn.UseVisualStyleBackColor = true;
+            this.AuthorizeFiles_btn.Click += new System.EventHandler(this.HandleAuthorizeFilesAction);
             // 
             // m_lnkGoogle
             // 
@@ -733,6 +754,10 @@
 
         }
 
+        private System.Windows.Forms.Label AuthorizeFiles_label;
+
+        private System.Windows.Forms.Button AuthorizeFiles_btn;
+
         #endregion
 
         private System.Windows.Forms.PictureBox m_bannerImage;
@@ -793,5 +818,6 @@
         private System.Windows.Forms.TextBox m_txtFolder;
         private System.Windows.Forms.Label m_lblFolder;
         private System.Windows.Forms.TabControl m_tabMain;
+        private System.Windows.Forms.ToolTip AuthorizeFiles_tooltip;
     }
 }
