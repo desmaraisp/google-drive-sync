@@ -23,7 +23,16 @@
     <TransformOutOfDateOnly>true</TransformOutOfDateOnly>
     <Satellite_ProductName>KeePass Plugin Satellite Resources</Satellite_ProductName>
     <PlgxTargetKpVersion>2.35</PlgxTargetKpVersion>
+    <CompileTimeConfig_ClientId>DevClientId</CompileTimeConfig_ClientId>
+    <CompileTimeConfig_DriveFilePickerPublicApiKey>DevPublicApiKey</CompileTimeConfig_DriveFilePickerPublicApiKey>
+    <CompileTimeConfig_GoogleDrivePickerAppId>DevAppId</CompileTimeConfig_GoogleDrivePickerAppId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <CompilerVisibleProperty Include="CompileTimeConfig_ClientId"/>
+    <CompilerVisibleProperty Include="CompileTimeConfig_GoogleDrivePickerAppId"/>
+    <CompilerVisibleProperty Include="CompileTimeConfig_DriveFilePickerPublicApiKey"/>
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
