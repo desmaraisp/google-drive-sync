@@ -1,0 +1,80 @@
+@model FilePicker.FilePickerOptions;
+@using RazorLight
+@inherits TemplatePage<FilePicker.FilePickerOptions>
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="">
+<head>
+    <meta charset="utf-8"/>
+    <title>Google Drive File Picker</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #picker_button {
+            width: fit-content;
+        }
+    </style>
+    <div>@Model</div>
+
+    <script type="text/javascript">
+        var developerKey = "@Model.GDrivePickerApiKey";
+        var appId = "@Model.AppId";
+        var accessToken = "@Model.AccessToken"
+
+        var pickerApiLoaded = false;
+
+        // Use the Google API Loader script to load the google.picker script.
+        function loadPicker() {
+            gapi.load('picker', {'callback': onPickerApiLoad});
+        }
+
+        function onPickerApiLoad() {
+            createPicker();
+        }
+
+        // Create and render a Picker object for searching images.
+        function createPicker() {
+            var picker = new google.picker.PickerBuilder()
+                .enableFeature(google.picker.Feature.NAV_HIDDEN)
+                .setAppId(appId)
+                .setOAuthToken(accessToken)
+                .addView(new google.picker.View(google.picker.ViewId.DOCS))
+                .setDeveloperKey(developerKey)
+                .setCallback(pickerCallback)
+                .build();
+            picker.setVisible(true);
+        }
+
+        // A simple callback implementation.
+        function pickerCallback(data) {
+            if (data.action === google.picker.Action.PICKED) {
+                const {id, name} = data.docs[0];
+                fetch("/", {
+                    method: "POST",
+                    body: JSON.stringify({id, name}),
+                })
+                    .then(() => {
+                        console.log('closing window');
+                        window.close();
+                    })
+                    .catch(() => alert("Failed to send information to KeePass"));
+            }
+        }
+    </script>
+</head>
+<body>
+<button id="picker_button" onclick="loadPicker()">Pick file</button>
+<div id="result"></div>
+
+<!-- The Google API Loader script. -->
+<script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
+</body>
+</html>

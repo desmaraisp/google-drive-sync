@@ -37,15 +37,13 @@ namespace KPSyncForDrive
         public static PluginEntryFactory CreateDefault(string title)
         {
             PluginConfig appConfig = PluginConfig.Default;
-            return Create(title, appConfig.LegacyDriveScope,
-                appConfig.PersonalClientId, appConfig.PersonalClientSecret,
-                appConfig.Folder, appConfig.UseLegacyAppCredentials,
+            return Create(title,
+                appConfig.Folder,
                 appConfig.DontSaveAuthToken);
         }
 
-        public static PluginEntryFactory Create(string title,
-            string driveScope, string clientId, ProtectedString clientSecret,
-            string folder, bool useLegacyCreds, bool dontSaveAuthToken)
+        private static PluginEntryFactory Create(string title,
+            string folder, bool dontSaveAuthToken)
         {
             PwEntry entry = new PwEntry(true, true);
             ProtectedStringDictionary strings = entry.Strings;
@@ -59,19 +57,9 @@ namespace KPSyncForDrive
                 new ProtectedString(false, GdsDefs.AccountSearchString));
 
             StringDictionaryEx data = entry.CustomData;
-            if (useLegacyCreds)
-            {
-                data.Set(SyncConfiguration.EntryDriveScopeKey, driveScope);
-                data.Set(SyncConfiguration.EntryClientIdKey, clientId);
-                data.Set(SyncConfiguration.EntryClientSecretKey,
-                    clientSecret == null ?
-                        string.Empty : clientSecret.ReadString());
-            }
             data.Set(SyncConfiguration.EntryActiveAppFolderKey, folder);
             data.Set(SyncConfiguration.EntryActiveAccountKey,
                         SyncConfiguration.EntryActiveAccountTrueKey);
-            data.Set(SyncConfiguration.EntryUseLegacyCredsKey, useLegacyCreds ?
-                GdsDefs.ConfigTrue : GdsDefs.ConfigFalse);
             data.Set(SyncConfiguration.EntryDontCacheAuthTokenKey,
                 dontSaveAuthToken ?
                 GdsDefs.ConfigTrue : GdsDefs.ConfigFalse);
@@ -82,13 +70,13 @@ namespace KPSyncForDrive
             return new PluginEntryFactory(entry);
         }
 
-        public static PwEntry Import(IPluginHost host,
+        public static void Import(IPluginHost host,
             PwDatabase database,
             PluginEntryFactory creator)
         {
             Form fParent = host.MainWindow;
             IUIOperations uiOps = host.MainWindow;
-            IOConnectionInfo[] vCx = new IOConnectionInfo[] { };
+            IOConnectionInfo[] vCx = { };
             bool? success = ImportUtil.Import(database, creator,
                 vCx, false, uiOps, false, fParent);
             if (success.HasValue && success.Value &&
@@ -98,7 +86,6 @@ namespace KPSyncForDrive
                 host.MainWindow.UpdateUI(false, null, false, null,
                     true, database.RootGroup, true);
             }
-            return creator.Entry;
         }
 
         PluginEntryFactory(PwEntry entry)

@@ -604,4 +604,13 @@ The local database could be out of sync with the Drive file.  Would you like to 
   <data name="Lnk_PrivacyPolicy" xml:space="preserve">
     <value>Privacy Policy</value>
   </data>
+  <data name="AuthorizeFiles_btn" xml:space="preserve">
+      <value>Authorize</value>
+  </data>
+  <data name="AuthorizeFiles_label" xml:space="preserve">
+      <value>Use existing gDrive files:</value>
+  </data>
+  <data name="AuthorizeFiles_tooltip" xml:space="preserve">
+      <value>This plugin uses the restricted Drive.Files google scope. As such, it can only access files not created by itself if you explicitly give it access to those files, otherwise the plugin creates duplicate files at the target location</value>
+  </data>
 </root>
