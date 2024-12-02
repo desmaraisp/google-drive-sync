@@ -2,7 +2,7 @@
  * Google Sync Plugin for KeePass Password Safe
  * Copyright © 2012-2016  DesignsInnovate
  * Copyright © 2014-2016  Paul Voegler
- * 
+ *
  * KPSync for Google Drive
  * Copyright © 2020-2021 Walter Goodwin
  *
@@ -20,9 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-using Google.Apis.Drive.v3;
 using KeePassLib;
-using KeePassLib.Security;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -53,19 +51,12 @@ namespace KPSyncForDrive
             ColorProvider colorProvider, FilePickerDelegate pickerDelegate, PwDatabase db)
         {
             Entries = entries;
-            EntryBindingSource = new BindingSource
-            {
-                DataSource = Entries
-            };
+            EntryBindingSource = new BindingSource { DataSource = Entries };
 
             m_colors = null;
             m_colorProvider = colorProvider;
             _mPickerDelegate = pickerDelegate;
             m_db = db;
-            DefaultUseKpgs3ClientId = 
-                SyncConfiguration.IsEmpty(
-                    PluginConfig.Default.PersonalClientId,
-                    PluginConfig.Default.PersonalClientSecret);
             m_config = PluginConfig.GetCopyOfDefault();
         }
 
@@ -94,8 +85,7 @@ namespace KPSyncForDrive
         {
             get
             {
-                return EntryBindingSource.IsBindingSuspended ?
-                    null : EntryBindingSource.Current as EntryConfiguration;
+                return EntryBindingSource.IsBindingSuspended ? null : EntryBindingSource.Current as EntryConfiguration;
             }
         }
 
@@ -111,11 +101,13 @@ namespace KPSyncForDrive
             }
             set
             {
-                if (m_config.IsCmdEnabled(SyncCommands.SYNC) != value)
+                if (m_config.IsCmdEnabled(SyncCommands.SYNC) == value)
                 {
-                    m_config.EnableCmd(SyncCommands.SYNC, value);
-                    RaisePropertyChanged("CmdSyncEnabled");
+                    return;
                 }
+
+                m_config.EnableCmd(SyncCommands.SYNC, value);
+                RaisePropertyChanged("CmdSyncEnabled");
             }
         }
 
@@ -151,23 +143,7 @@ namespace KPSyncForDrive
             }
         }
 
-        public bool SyncOnOpen 
-        {
-            get
-            {
-                return m_config.IsAutoSync(AutoSyncMode.OPEN);
-            }
-            set
-            {
-                if (m_config.IsAutoSync(AutoSyncMode.OPEN) != value)
-                {
-                    m_config.EnableAutoSync(AutoSyncMode.OPEN, value);
-                    RaisePropertyChanged("SyncOnOpen");
-                }
-            }
-        }
-
-        public bool SyncOnSave 
+        public bool SyncOnSave
         {
             get
             {
@@ -175,31 +151,16 @@ namespace KPSyncForDrive
             }
             set
             {
-                if (m_config.IsAutoSync(AutoSyncMode.SAVE) != value)
+                if (m_config.IsAutoSync(AutoSyncMode.SAVE) == value)
                 {
-                    m_config.EnableAutoSync(AutoSyncMode.SAVE, value);
-                    RaisePropertyChanged("SyncOnSave");
-                    if (!value)
-                    {
-                        AutoResumeSaveSync = false;
-                    }
+                    return;
                 }
-            }
-        }
 
-        public string DefaultAppFolder 
-        {
-            get
-            {
-                return m_config.Folder.Trim();
-            }
-            set
-            {
-                if (!string.Equals(DefaultAppFolder, value,
-                    StringComparison.InvariantCultureIgnoreCase))
+                m_config.EnableAutoSync(AutoSyncMode.SAVE, value);
+                RaisePropertyChanged("SyncOnSave");
+                if (!value)
                 {
-                    m_config.Folder = value ?? string.Empty;
-                    RaisePropertyChanged("DefaultAppFolder");
+                    AutoResumeSaveSync = false;
                 }
             }
         }
@@ -214,109 +175,6 @@ namespace KPSyncForDrive
             {
                 m_config.FolderColor = value;
                 RaisePropertyChanged("DefaultAppFolderColor");
-            }
-        }
-
-        public bool DefaultIsLegacyRestrictedDriveScope
-        {
-            get
-            {
-                return m_config.LegacyDriveScope ==
-                    DriveService.Scope.Drive;
-            }
-            set
-            {
-                if (DefaultIsLegacyRestrictedDriveScope != value)
-                {
-                    m_config.LegacyDriveScope = value ?
-                        DriveService.Scope.Drive : DriveService.Scope.DriveFile;
-                    RaisePropertyChanged("DefaultIsLegacyRestrictedDriveScope");
-                }
-            }
-        }
-
-        public string DefaultLegacyClientId
-        {
-            get
-            {
-                return DefaultUseKpgs3ClientId ?
-                    string.Empty : m_config.PersonalClientId;
-            }
-            set
-            {
-                if (DefaultLegacyClientId != value)
-                {
-                    m_config.PersonalClientId = value;
-                    RaisePropertyChanged("DefaultLegacyClientId");
-                }
-            }
-        }
-
-        public ProtectedString DefaultLegacyClientSecret
-        {
-            get
-            {
-                return DefaultUseKpgs3ClientId ?
-                    GdsDefs.PsEmptyEx : m_config.PersonalClientSecret;
-            }
-            set
-            {
-                if (!DefaultLegacyClientSecret.OrdinalEquals(value, false))
-                {
-                    m_config.PersonalClientSecret = value == null ?
-                        GdsDefs.PsEmptyEx : value;
-                    RaisePropertyChanged("DefaultLegacyClientSecret");
-                }
-            }
-        }
-
-        public bool DefaultUseKpgs3ClientId { get; set; }
-
-        public bool DefaultUseLegacyCredentials
-        {
-            get
-            {
-                return m_config.UseLegacyAppCredentials;
-            }
-            set
-            {
-                if (m_config.UseLegacyAppCredentials != value)
-                {
-                    m_config.UseLegacyAppCredentials = value;
-                    RaisePropertyChanged("DefaultUseLegacyCredentials");
-                }
-            }
-        }
-
-        public bool DefaultDontSaveAuthToken
-        {
-            get
-            {
-                return m_config.DontSaveAuthToken;
-            }
-            set
-            {
-                if (m_config.DontSaveAuthToken != value)
-                {
-                    m_config.DontSaveAuthToken = value;
-                    RaisePropertyChanged("DefaultDontSaveAuthToken");
-                }
-            }
-        }
-
-        public bool WarnOnSavedAuthToken
-        {
-            get
-            {
-                return m_config.WarnOnSavedAuthToken;
-            }
-            set
-            {
-                if (m_config.WarnOnSavedAuthToken != value)
-                {
-                    m_config.WarnOnSavedAuthToken = value;
-                    RaisePropertyChanged("WarnOnSavedAuthToken");
-                }
             }
         }
 
@@ -338,18 +196,20 @@ namespace KPSyncForDrive
 
         public async Task<IEnumerable<Color>> GetColors()
         {
-            if (m_colors == null)
+            if (m_colors != null)
             {
-                EntryConfiguration current;
-                current = EntryBindingSource.Current as EntryConfiguration;
-                IEnumerable<Color> result
-                    = await m_colorProvider(current, new DatabaseContext(m_db));
-                if (!result.Any())
-                {
-                    return result;
-                }
-                m_colors = result;
+                return m_colors;
             }
+
+            var current = EntryBindingSource.Current as EntryConfiguration;
+            IEnumerable<Color> result
+                = await m_colorProvider(current, new DatabaseContext(m_db));
+            if (!result.Any())
+            {
+                return result;
+            }
+
+            m_colors = result;
             return m_colors;
         }
 

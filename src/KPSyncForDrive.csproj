@@ -17,8 +17,6 @@
     <PlatformTarget Condition=" '$(PlatformTarget)' == '' ">AnyCPU</PlatformTarget>
     <LangVersion>5</LangVersion>
     <UseWindowsForms>true</UseWindowsForms>
-    <GenClientIdFolder>$(MSBuildProjectDirectory)\..\lib\src\GenClientId\bin\$(Configuration)\$(TargetFramework)\</GenClientIdFolder>
-    <ClientIdSrcFolder>$(MSBuildProjectDirectory)\</ClientIdSrcFolder>
     <TransformOnBuild>true</TransformOnBuild>
     <TransformOutOfDateOnly>true</TransformOutOfDateOnly>
     <Satellite_ProductName>KeePass Plugin Satellite Resources</Satellite_ProductName>
@@ -63,35 +61,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- This is the T4 template transformer service marker. -->
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}">
-      <ExcludeFromPlgx>true</ExcludeFromPlgx>
-    </Service>
-    <None Update="GdsDefs.Data.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>GdsDefs.Data.cs</LastGenOutput>
-      <Visible>true</Visible>
-      <ExcludeFromPlgx>true</ExcludeFromPlgx>
-    </None>
-    <T4ParameterValues Include="ClientIdSrcFolder">
-      <Value>$(ClientIdSrcFolder)</Value>
-      <Visible>false</Visible>
-      <ExcludeFromPlgx>true</ExcludeFromPlgx>
-    </T4ParameterValues>
-    <T4ParameterValues Include="GenClientIdFolder">
-      <Value>$(GenClientIdFolder)</Value>
-      <Visible>false</Visible>
-      <ExcludeFromPlgx>true</ExcludeFromPlgx>
-    </T4ParameterValues>
-    <Compile Update="GdsDefs.Data.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>GdsDefs.Data.tt</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="SavedAuthWarning.cs" />
+    <Compile Update="SavedAuthWarning.cs"/>
     <Compile Update="SavedAuthWarning.Designer.cs">
       <DependentUpon>SavedAuthWarning.cs</DependentUpon>
     </Compile>
@@ -151,10 +121,7 @@
 
   <ItemGroup>
     <None Update="app.config">
-      <ExcludeFromPlgx />
-    </None>
-    <None Update="GdsDefs.OAuthCreds.txt">
-      <ExcludeFromPlgx />
+      <ExcludeFromPlgx/>
     </None>
   </ItemGroup>
 

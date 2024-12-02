@@ -29,11 +29,9 @@ namespace KPSyncForDrive
 {
     public partial class SharedFileError : Form
     {
-        internal static DialogResult ShowIfNeeded(IPluginHost host,
-            string fileName, SyncConfiguration config, bool bIsAutoSync)
+        internal static DialogResult ShowIfNeeded(string fileName, SyncConfiguration config, bool bIsAutoSync)
         {
-            if (config.DontSaveAuthToken ||
-                config.IsUsingPersonalOauthCreds)
+            if (config.DontSaveAuthToken)
             {
                 return DialogResult.None;
             }

@@ -51,7 +51,6 @@ using KeePass.UI;
 using KeePass.Util;
 using KeePassLib;
 using KeePassLib.Cryptography;
-using KeePassLib.Delegates;
 using KeePassLib.Interfaces;
 using KeePassLib.Security;
 using KeePassLib.Serialization;
@@ -592,7 +591,7 @@ namespace KPSyncForDrive
             ProtectedString RefreshToken = config.RefreshToken;
 
             // Invoke service user.
-            status = await UseDriveService(config, dbCtx, use);
+            status = await UseDriveService(config, use);
 
             // Update the configuration if necessary.
             if (status != "ERROR" &&
@@ -606,19 +605,6 @@ namespace KPSyncForDrive
                 // database entry.
                 string status2 = Resources.GetString("Msg_SaveUserAuth");
                 m_host.ShowStatusMessage(status2);
-
-
-                // Traditionally, the plugin's indicator for "use default 
-                // clientId" is empty strings for clientId & secret.  Maintain
-                // that compatibility point.
-                if (config.UseLegacyCreds &&
-                    GdsDefs.LegacyClientId.ReadString() == config.ClientId &&
-                     GdsDefs.LegacyClientSecret
-                        .OrdinalEquals(config.ClientSecret, true))
-                {
-                    config.ClientId = string.Empty;
-                    config.ClientSecret = null;
-                }
             }
 
             config.CommitChangesIfAny();
@@ -627,8 +613,7 @@ namespace KPSyncForDrive
             return status;
         }
 
-        internal async Task<string> UseDriveService(SyncConfiguration authData,
-            DatabaseContext dbCtx,
+        private async Task<string> UseDriveService(SyncConfiguration authData,
             Func<DriveService, SyncConfiguration, Task<string>> use)
         {
             string status;
@@ -639,7 +624,7 @@ namespace KPSyncForDrive
                     new BaseClientService.Initializer()
                 {
                     HttpClientInitializer
-                        = await GetAuthorization(m_host, dbCtx, authData),
+                        = await GetAuthorization(authData),
                     ApplicationName = GdsDefs.ProductName,
                     HttpClientFactory = new ProxyHttpClientFactory()
                 });
@@ -723,8 +708,8 @@ namespace KPSyncForDrive
                 status = null;
 
                 List<Folder> folders = await GetFolders(service, config.ActiveFolder);
-                GDriveFile file = await GetFile(service, folders, fileName, 
-                                            config, autoSync);
+                var file = await GetFile(service, folders, fileName, config, autoSync);
+
                 if (file == null)
                 {
                     if (sync == SyncCommands.DOWNLOAD)
@@ -778,8 +763,7 @@ namespace KPSyncForDrive
                             }
                             else
                             {
-                                string syncStatus = SyncFromThenDeleteFile(
-                                    dbCtx, fileCopy, autoSync);
+                                string syncStatus = SyncFromThenDeleteFile(fileCopy, autoSync);
                                 status = Resources.GetString("Msg_UploadingSync");
                                 m_host.ShowStatusMessage(status);
                                 status = String.Format("{0} {1}", syncStatus,
@@ -1023,8 +1007,7 @@ namespace KPSyncForDrive
             {
                 Log.Info("Drive file '{0}' is 'shared', or assumed to " +
                     "be so.", fileName);
-                DialogResult dr = SharedFileError.ShowIfNeeded(m_host,
-                    fileName, config, autoSync);
+                DialogResult dr = SharedFileError.ShowIfNeeded(fileName, config, autoSync);
                 if (dr == DialogResult.OK)
                 {
                     throw new PluginStatusException(
@@ -1111,8 +1094,7 @@ namespace KPSyncForDrive
         /// <param name="tempFilePath">Full path of database file to sync
         /// with</param>
         /// <returns>Return status of the update</returns>
-        private string SyncFromThenDeleteFile(DatabaseContext dbCtx,
-            string tempFilePath, bool bIsAutoSync)
+        private string SyncFromThenDeleteFile(string tempFilePath, bool bIsAutoSync)
         {
             string status = null;
             Form fParent = m_host.MainWindow;
@@ -1120,7 +1102,7 @@ namespace KPSyncForDrive
             {
                 fParent.Invoke(new MethodInvoker(() =>
                 {
-                    status = SyncFromThenDeleteFile(dbCtx, tempFilePath,
+                    status = SyncFromThenDeleteFile(tempFilePath,
                         bIsAutoSync);
                 }));
                 return status;
@@ -1136,7 +1118,7 @@ namespace KPSyncForDrive
             bool? success;
             using (new MruFreezer(m_host))
             {
-                success = ImportUtil.Synchronize(dbCtx.Database, uiOps,
+                success = ImportUtil.Synchronize(_dbContext.Database, uiOps,
                     connection, bForceSave: true, fParent: fParent);
             }
 
@@ -1155,7 +1137,7 @@ namespace KPSyncForDrive
             });
 
             if ((!success.HasValue || !success.Value) &&
-                bIsAutoSync && !dbCtx.Database.IsOpen)
+                bIsAutoSync && !_dbContext.Database.IsOpen)
             {
                 throw new PluginException(
                     Resources.GetString("Exc_DbClosedOnAutoSync"));
@@ -1386,88 +1368,48 @@ namespace KPSyncForDrive
         /// Get Access Token from Google OAuth 2.0 API
         /// </summary>
         /// <returns>The Sign-in credentials (access token)</returns>
-        private static async Task<UserCredential> GetAuthorization(IPluginHost host,
-            DatabaseContext dbCtx, SyncConfiguration config)
+        private async Task<UserCredential> GetAuthorization(SyncConfiguration config)
         {
-            string clientId;
-            ProtectedString secret;
-            if (!config.UseLegacyCreds)
-            {
-                Log.Debug("Using built-in app creds for authorization.");
-                clientId = GdsDefs.ClientId.ReadString().Trim();
-                secret = GdsDefs.ClientSecret;
-            }
-            else if (config.IsEmptyOauthCredentials)
-            {
-                Log.Debug("Using GSync 3.0 app creds for authorization.");
-                clientId = GdsDefs.LegacyClientId.ReadString().Trim();
-                secret = GdsDefs.LegacyClientSecret;
-            }
-            else
-            {
-                Log.Debug("Using personal app creds for authorization.");
-                clientId = config.ClientId;
-                secret = config.ClientSecret;
-            }
-
-            // Scope choice only available with legacy creds.
-            string scope;
-            if (config.UseLegacyCreds &&
-                !string.IsNullOrEmpty(config.LegacyDriveScope))
-            {
-                Log.Debug("Requesting scope '{0}' for legacy app creds.",
-                    config.LegacyDriveScope);
-                scope = config.LegacyDriveScope;
-            }
-            else
-            {
-                scope = DriveService.Scope.Drive;
-            }
-
+            string clientId = _staticPluginOptions.GetConfig().ClientId;
+            string scope = DriveService.Scope.DriveFile;
+            
             // Set up the Installed App OAuth 2.0 Flow for Google APIs with a
             // custom code receiver that uses the system browser to 
             // authenticate the Google user and/or authorize the use of the
             // API by this program.
-            GoogleAuthorizationCodeFlow.Initializer init;
-            init = new GoogleAuthorizationCodeFlow.Initializer
+            var init = new GoogleAuthorizationCodeFlow.Initializer
             {
                 DataStore = DataStore.Default,
                 ClientSecrets = new ClientSecrets()
                 {
                     ClientId = clientId,
-                    ClientSecret = secret.ReadString().Trim()
                 },
                 Scopes = new[] { scope },
                 HttpClientFactory = new ProxyHttpClientFactory()
             };
-            GoogleAuthorizationCodeFlow codeFlow
-                = new GoogleAuthorizationCodeFlow(init);
-            NativeCodeReceiver codeReceiver
-                = new NativeCodeReceiver(host, dbCtx, config);
-            AuthorizationCodeInstalledApp authCode;
-            authCode = new AuthorizationCodeInstalledApp(codeFlow, codeReceiver);
+            GoogleAuthorizationCodeFlow codeFlow = new GoogleAuthorizationCodeFlow(init);
+            NativeCodeReceiver codeReceiver = new NativeCodeReceiver(m_host, _dbContext, config);
+            var authCode = new AuthorizationCodeInstalledApp(codeFlow, codeReceiver);
             UserCredential credential = null;
 
             string status;
 
             // Look for the auth token in the session state first, then
             // check in the config entry.
-            ProtectedString authToken = GdsDefs.PsEmptyEx;
-            if (!dbCtx.Database.TryGetSessionToken(out authToken) &&
-                !config.DontSaveAuthToken)
+            ProtectedString authToken;
+            if (!_dbContext.Database.TryGetSessionToken(out authToken) && !config.DontSaveAuthToken)
             {
                 Log.Debug("Retrieving refresh token from config.");
                 authToken = config.RefreshToken;
             }
 
             // Warn user that there is a stored auth token if desired.
-            if (!config.RefreshToken.IsNullOrEmpty() &&
-                PluginConfig.Default.WarnOnSavedAuthToken)
+            if (!config.RefreshToken.IsNullOrEmpty() && PluginConfig.Default.WarnOnSavedAuthToken)
             {
                 DialogResult dlgRes = await Task.Run(() =>
                 {
                     status = Resources.GetString("Msg_AuthTokenPrompting");
-                    host.ShowStatusMessage(status);
+                    m_host.ShowStatusMessage(status);
 
                     return ShowModalDialogAndDestroy<SavedAuthWarning>();
                 });
@@ -1482,14 +1424,14 @@ namespace KPSyncForDrive
             {
                 // Try using an existing Refresh Token to get a new Access Token
                 status = Resources.GetString("Msg_RefreshTokenAuth");
-                host.ShowStatusMessage(status);
+                m_host.ShowStatusMessage(status);
 
                 try
                 {
-                    TokenResponse token;
-                    token = await authCode.Flow.RefreshTokenAsync("user",
-                                                        authToken.ReadString(),
-                                                        CancellationToken.None);
+                    var token = await authCode.Flow.RefreshTokenAsync(
+                        "user",
+                        authToken.ReadString(),
+                        CancellationToken.None);
                     credential = new UserCredential(codeFlow, "user", token);
                 }
                 catch (TokenResponseException ex)
@@ -1503,7 +1445,7 @@ namespace KPSyncForDrive
                                 "attempt reauth ('{0}').", ex.Error.Error);
                             credential = null;
                             config.RefreshToken = null;
-                            dbCtx.Database.RemoveSessionToken();
+                            _dbContext.Database.RemoveSessionToken();
                             break;
                         default:
                             throw;
@@ -1518,7 +1460,7 @@ namespace KPSyncForDrive
                 // authorize the access to Drive.
 
                 status = Resources.GetString("Msg_UserAuth");
-                host.ShowStatusMessage(status);
+                m_host.ShowStatusMessage(status);
 
                 credential = await authCode.AuthorizeAsync("user",
                                                 CancellationToken.None);
@@ -1539,7 +1481,7 @@ namespace KPSyncForDrive
                 config.RefreshToken = authToken;
             }
 
-            dbCtx.Database.SetSessionToken(authToken);
+            _dbContext.Database.SetSessionToken(authToken);
 
             return credential;
         }
@@ -1642,33 +1584,9 @@ namespace KPSyncForDrive
         async Task<IEnumerable<Color>> GetColors(SyncConfiguration authData,
             DatabaseContext dbCtx)
         {
-            SyncConfiguration originalAuthData = authData;
-            if (!authData.UseLegacyCreds)
-            {
-                authData = new TransientConfiguration(authData)
-                {
-                    ClientId = GdsDefs.ClientId.ReadString(),
-                    ClientSecret = GdsDefs.ClientSecret
-                };
+            int[] palette = Array.Empty<int>();
 
-            }
-            else if (authData.IsEmptyOauthCredentials)
-            {
-                authData = new TransientConfiguration(authData)
-                {
-                    ClientId = GdsDefs.LegacyClientId.ReadString(),
-                    ClientSecret = GdsDefs.LegacyClientSecret
-                };
-            }
-            else
-            {
-                originalAuthData = null;
-            }
-
-            int[] palette = new int[0];
-
-            string status;
-            status = await UseDriveService(authData, dbCtx,
+            var status = await UseDriveService(authData,
                 async (service, config) =>
             {
                 AboutResource aboutResource = new AboutResource(service);
@@ -1683,15 +1601,6 @@ namespace KPSyncForDrive
             });
 
             m_host.ShowStatusMessage(status);
-
-            if (originalAuthData != null &&
-                (authData.RefreshToken == null || originalAuthData.RefreshToken == null ||
-                 !authData.RefreshToken.OrdinalEquals(originalAuthData.RefreshToken, true)))
-            {
-                // Copy new refresh token for caller.
-                originalAuthData.RefreshToken = authData.RefreshToken;
-            }
-
             return palette.Select(i => Color.FromArgb((int)(0xFF000000|(uint)i)));
         }
 
@@ -1844,8 +1753,6 @@ namespace KPSyncForDrive
                 {
                     return false;
                 }
-
-                entryConfig.UseLegacyCreds = DialogResult.No == result;
                 if (DialogResult.Yes == result)
                 {
                     entryConfig.RefreshToken = null;
@@ -1892,20 +1799,6 @@ namespace KPSyncForDrive
                 if (config != null)
                 {
                     SaveConfiguration(config, dbCtx.Database);
-
-                    // Seed the effective credentials.
-                    if (!config.UseLegacyCreds)
-                    {
-                        config.ClientId = GdsDefs.ClientId.ReadString();
-                        config.ClientSecret = GdsDefs.ClientSecret;
-                    }
-                    else if (config.IsEmptyOauthCredentials)
-                    {
-                        // Use legacy OAuth 2.0 credentials if personal creds
-                        // are missing.
-                        config.ClientId = GdsDefs.LegacyClientId.ReadString();
-                        config.ClientSecret = GdsDefs.LegacyClientSecret;
-                    }
                 }
             }
             return config;
@@ -1982,7 +1875,7 @@ namespace KPSyncForDrive
 
         async Task<FilePick> GetFile(SyncConfiguration authData)
         {
-            var res = await GetAuthorization(m_host, _dbContext, authData);
+            var res = await GetAuthorization(authData);
             
             return await _pickerForm.SelectFile(res.Token.AccessToken, authData, CancellationToken.None);
         }
