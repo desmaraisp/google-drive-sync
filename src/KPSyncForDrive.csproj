@@ -6,12 +6,13 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <Product>KeePass Plugin</Product>
     <AssemblyTitle>KPSync For Google Drive</AssemblyTitle>
     <Description>Safely synchronize KeePass database files with Google Drive.</Description>
-    <Copyright>Copyright ©  2020-2021</Copyright>
+    <Copyright>Copyright © 2020-2021</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ApplicationIcon>Images\gdsync.ico</ApplicationIcon>
     <PlatformTarget Condition=" '$(PlatformTarget)' == '' ">AnyCPU</PlatformTarget>
     <LangVersion>5</LangVersion>
@@ -29,20 +30,27 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\lib\src\WindowsControls\WindowsControls.csproj" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Net.Http" />
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.51.0.2265" />
-    <PackageReference Include="PlgxBuildTasks" Version="1.1.1-beta" />
-    <PackageReference Include="Serilog" Version="2.10.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
+    <PackageReference Include="System.Resources.Extensions" Version="9.0.0"/>
+    <ProjectReference Include="..\lib\src\CompileTimeConfigPublicMembers\CompileTimeConfigPublicMembers.csproj"/>
+    <ProjectReference
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+      Include="..\lib\src\CompileTimeConfigGenerator\CompileTimeConfigGenerator.csproj"/>
+    <ProjectReference Include="..\lib\src\FilePicker\FilePicker.csproj"/>
+    <ProjectReference Include="..\lib\src\WindowsControls\WindowsControls.csproj"/>
+    <Reference Include="System.Configuration"/>
+    <Reference Include="System.Windows.Forms"/>
+    <Reference Include="System.Net.Http"/>
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3601"/>
+    <PackageReference Include="PlgxBuildTasks" Version="1.1.1-beta"/>
+    <PackageReference Include="Serilog" Version="4.1.0"/>
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0"/>
     <Reference Include="KeePass.exe">
       <HintPath>..\lib\bin\KeePass.exe</HintPath>
       <Private>False</Private>
     </Reference>
     <!-- Before upgrading check Google.Apis.* dependency. -->
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -78,15 +86,15 @@
     <Compile Update="SavedAuthWarning.Designer.cs">
       <DependentUpon>SavedAuthWarning.cs</DependentUpon>
     </Compile>
-    <Compile Update="ConfigurationForm.cs" />
+    <Compile Update="ConfigurationForm.cs"/>
     <Compile Update="ConfigurationForm.Designer.cs">
       <DependentUpon>ConfigurationForm.cs</DependentUpon>
     </Compile>
-    <Compile Update="AuthWaitOrCancel.cs" />
+    <Compile Update="AuthWaitOrCancel.cs"/>
     <Compile Update="AuthWaitOrCancel.Designer.cs">
       <DependentUpon>AuthWaitOrCancel.cs</DependentUpon>
     </Compile>
-    <Compile Update="AppCredsUpgrade.cs" />
+    <Compile Update="AppCredsUpgrade.cs"/>
     <Compile Update="AppCredsUpgrade.Designer.cs">
       <DependentUpon>AppCredsUpgrade.cs</DependentUpon>
     </Compile>
@@ -95,7 +103,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
-    <Compile Update="SharedFileError.cs" />
+    <Compile Update="SharedFileError.cs"/>
     <Compile Update="SharedFileError.Designer.cs">
       <DependentUpon>SharedFileError.cs</DependentUpon>
     </Compile>
