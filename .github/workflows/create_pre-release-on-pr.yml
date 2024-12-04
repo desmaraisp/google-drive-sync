@@ -16,7 +16,7 @@ jobs:
 
     - name: publish
       run: |
-        msbuild -t:build -m -p:'Configuration=Release' .\src\KPSyncForDrive.csproj `
+        msbuild -t:restore,build -m -p:'Configuration=Release' .\src\KPSyncForDrive.csproj `
           -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
           -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}'
 
