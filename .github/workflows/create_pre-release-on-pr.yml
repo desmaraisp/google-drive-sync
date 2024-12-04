@@ -27,8 +27,11 @@ jobs:
       run: |
         $randString = -join ((48..57) + (97..122) | Get-Random -Count 10 | % {[char]$_})
         mkdir ./dist
-        move-item "./src/bin/Any Cpu/Release/net48/*.plgx" -Destination ./dist/pr-$ENV:PR_NUMBER.$randString.plgx
+        move-item "./src/bin/Any Cpu/Release/net48/KPSyncForDrive.plgx" -Destination ./dist/pr-$ENV:PR_NUMBER.$randString.plgx
         Compress-Archive -Path "./src/bin/Any Cpu/Release/net48/*" -DestinationPath ./dist/pr-$ENV:PR_NUMBER.$randString.zip -CompressionLevel Optimal -Force
+        [System.IO.FileSystemInfo[]]$files = Get-ChildItem ./dist/
+        Write-Host "$($files.Count) files found in dist directory:"
+        $files
 
     - name: Upload plgx Artifact
       uses: actions/upload-artifact@v4
@@ -36,7 +39,7 @@ jobs:
       with:
         name: plgx-artifact
         retention-days: 15
-        path: dist/*.plgx
+        path: ./dist/*.plgx
         if-no-files-found: error
 
     - name: Upload zipped Artifacts
@@ -45,7 +48,7 @@ jobs:
       with:
         name: zip-artifact
         retention-days: 15
-        path: dist/*.zip
+        path: ./dist/*.zip
         if-no-files-found: error
 
     - uses: actions/github-script@v6
