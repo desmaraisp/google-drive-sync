@@ -17,8 +17,8 @@ jobs:
     - name: publish
       run: |
         msbuild -t:build -m -p:'Configuration=Release' .\src\KPSyncForDrive.csproj `
-          -p:'GCPCLIENTID=${{vars.GCPCLIENTID}}' -p:'GDRIVEAPPID=${{vars.GDRIVEAPPID}}' `
-          -p:'GDRIVEFILEPICKERAPIKEY=${{vars.GDRIVEFILEPICKERAPIKEY}}'
+          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
+          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}'
 
     - name: zip results
       env:
@@ -28,7 +28,7 @@ jobs:
         $randString = -join ((48..57) + (97..122) | Get-Random -Count 10 | % {[char]$_})
         mkdir ./dist
         move-item ./src/bin/Release/net48/*.plgx -Destination ./dist/pr-$ENV:PR_NUMBER.$randString.plgx
-        Compress-Archive -Path ./src/bin/Release/net48/ -DestinationPath ./dist/pr-$ENV:PR_NUMBER.$randString.zip -CompressionLevel Optimal -Force
+        Compress-Archive -Path ./src/bin/Release/net48/* -DestinationPath ./dist/pr-$ENV:PR_NUMBER.$randString.zip -CompressionLevel Optimal -Force
 
     - name: Upload plgx Artifact
       uses: actions/upload-artifact@v4
