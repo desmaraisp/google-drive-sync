@@ -20,6 +20,12 @@ jobs:
           -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
           -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}'
 
+        # The publish needs to be run separately, since the PLGX build task seems to not run on first build
+        msbuild -t:publish -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
+          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
+          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}'
+
+
     - name: zip results
       env:
         PR_NUMBER: ${{ github.event.number }}
@@ -28,7 +34,7 @@ jobs:
         $randString = -join ((48..57) + (97..122) | Get-Random -Count 10 | % {[char]$_})
         mkdir ./dist
         move-item "./src/bin/Any Cpu/Release/net48/*.plgx" -Destination ./dist/pr-$ENV:PR_NUMBER.$randString.plgx
-        Compress-Archive -Path "./src/bin/Any Cpu/Release/net48/*" -DestinationPath ./dist/pr-$ENV:PR_NUMBER.$randString.zip -CompressionLevel Optimal -Force
+        Compress-Archive -Path "./src/bin/Any Cpu/Release/net48/publish/*" -DestinationPath ./dist/pr-$ENV:PR_NUMBER.$randString.zip -CompressionLevel Optimal -Force
         [System.IO.FileSystemInfo[]]$files = Get-ChildItem ./dist/
         Write-Host "$($files.Count) files found in dist directory:"
         $files
