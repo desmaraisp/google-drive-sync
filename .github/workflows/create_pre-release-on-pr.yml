@@ -11,17 +11,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+  
+    - uses: microsoft/setup-msbuild@v2
 
-    - uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.x'
-
-    - name: restore and build
-      run: |
-        dotnet build .\src\KPSyncForDrive.csproj
-    
     - name: publish
-      run: dotnet publish .\src\KPSyncForDrive.csproj -c Release
+      run: |
+        msbuild -t:build -m -p:'Configuration=Release' .\src\KPSyncForDrive.csproj `
+          -p:'GCPCLIENTID=${{vars.GCPCLIENTID}}' -p:'GDRIVEAPPID=${{vars.GDRIVEAPPID}}' `
+          -p:'GDRIVEFILEPICKERAPIKEY=${{vars.GDRIVEFILEPICKERAPIKEY}}'
 
     - name: zip results
       env:
