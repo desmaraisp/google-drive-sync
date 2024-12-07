@@ -20,7 +20,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-using Google.Apis.Drive.v3;
 using KeePassLib;
 using KeePassLib.Collections;
 using KeePassLib.Security;
@@ -53,15 +52,11 @@ namespace KPSyncForDrive
         protected const string Ver1_1 = "1.1";
         protected const string CurrentVer = Ver1_1;
 
-        public const string EntryClientIdKey = "GoogleSync.ClientID";
-        public const string EntryClientSecretKey = "GoogleSync.ClientSecret";
         public const string EntryRefreshTokenKey = "GoogleSync.RefreshToken";
         public const string EntryActiveAccountKey = "GoogleSync.ActiveAccount";
         public const string EntryActiveAccountFalseKey = EntryActiveAccountKey + "." + GdsDefs.ConfigFalse;
         public const string EntryActiveAccountTrueKey = EntryActiveAccountKey + "." + GdsDefs.ConfigTrue;
         public const string EntryActiveAppFolderKey = "GoogleSync.ActiveAppFolder";
-        public const string EntryDriveScopeKey = "GoogleSync.DriveApiScope";
-        public const string EntryUseLegacyCredsKey = "GoogleSync.UseLegacyAppCreds";
         public const string EntryVersionKey = "GoogleSync.ConfigVersion";
         public const string EntryDontCacheAuthTokenKey = "GoogleSync.NoAuthTokens";
 
@@ -75,153 +70,12 @@ namespace KPSyncForDrive
             return config.Version < Version.Parse(Ver1_0);
         }
 
-        public static SyncConfiguration GetEmpty()
-        {
-            return new TransientConfiguration();
-        }
-
-        public static bool IsEmpty(string clientId,
-            ProtectedString clientSecret)
-        {
-            return string.IsNullOrEmpty(clientId) ||
-                clientSecret == null ||
-                clientSecret.IsEmpty;
-        }
-
-        public bool IsEmptyOauthCredentials
-        {
-            get
-            {
-                return IsEmpty(ClientId, ClientSecret);
-            }
-        }
-
-        public bool IsUsingPersonalOauthCreds
-        {
-            get
-            {
-                return UseLegacyCreds &&
-                    ClientId != GdsDefs.LegacyClientId.ReadString();
-            }
-        }
-
         // KeePass string fields.
-        public abstract string Title { get; }
-        public abstract string User { get; }
-        public abstract ProtectedString Password { get; }
         public abstract string LoginHint { get; }
-
-        // Plugin string fields.
-        public abstract bool? ActiveAccount { get; set; }
-        public abstract string ClientId { get; set; }
-        public abstract ProtectedString ClientSecret { get; set; }
         public abstract ProtectedString RefreshToken { get; set; }
         public abstract string ActiveFolder { get; set; }
-        public abstract string LegacyDriveScope { get; set; }
-        public abstract bool UseLegacyCreds { get; set; }
         public abstract bool DontSaveAuthToken { get; set; }
         public abstract Version Version { get; }
-    }
-
-    class TransientConfiguration : SyncConfiguration
-    {
-        static ProtectedString NullOrCopy(ProtectedString copyee)
-        {
-            if (copyee == null)
-            {
-                return null;
-            }
-            return new ProtectedString(copyee.IsProtected, copyee.ReadString());
-        }
-
-        readonly string m_title;
-        readonly string m_user;
-        readonly ProtectedString m_password;
-        readonly string m_loginHint;
-        readonly Version m_ver;
-
-        public TransientConfiguration()
-        {
-            ActiveAccount = null;
-            m_user = null;
-            m_password = null;
-            m_loginHint = null;
-            m_title = null;
-            ClientId = null;
-            ClientSecret = null;
-            RefreshToken = null;
-            ActiveFolder = null;
-            LegacyDriveScope = null;
-            m_ver = Version.Parse(CurrentVer);
-        }
-
-        public TransientConfiguration(SyncConfiguration copyee)
-        {
-            ActiveAccount = copyee.ActiveAccount;
-            m_user = copyee.User;
-            m_password = NullOrCopy(copyee.Password);
-            ClientId = copyee.ClientId;
-            ClientSecret = NullOrCopy(copyee.ClientSecret);
-            RefreshToken = NullOrCopy(copyee.RefreshToken);
-            m_loginHint = copyee.LoginHint;
-            m_title = copyee.Title;
-            ActiveFolder = copyee.ActiveFolder;
-            LegacyDriveScope = copyee.LegacyDriveScope;
-            m_ver = copyee.Version;
-        }
-
-        public override bool? ActiveAccount { get; set; }
-
-        public override string Title
-        {
-            get
-            {
-                return m_title;
-            }
-        }
-
-        public override string User
-        {
-            get
-            {
-                return m_user;
-            }
-        }
-
-        public override ProtectedString Password
-        {
-            get
-            {
-                return m_password;
-            }
-        }
-
-        public override string LoginHint
-        {
-            get
-            {
-                return m_loginHint;
-            }
-        }
-
-        public override string ClientId { get; set; }
-
-        public override ProtectedString ClientSecret { get; set; }
-
-        public override ProtectedString RefreshToken { get; set; }
-
-        public override string ActiveFolder { get; set; }
-        
-        public override bool UseLegacyCreds { get; set; }
-
-        public override string LegacyDriveScope { get; set; }
-
-        public override bool DontSaveAuthToken { get; set; }
-
-        public override Version Version 
-        {
-            get { return m_ver; }
-        }
     }
 
     /// <summary>
@@ -232,7 +86,6 @@ namespace KPSyncForDrive
     public class EntryConfiguration : SyncConfiguration
     {
         readonly Dictionary<string, object> m_changes;
-        string m_title;
         DateTime m_touched;
         bool m_credsChanged;
 
@@ -240,11 +93,8 @@ namespace KPSyncForDrive
         {
             Entry = entry;
             m_changes = new Dictionary<string, object>(5);
-            m_title = null;
             m_touched = Entry.LastModificationTime;
             m_credsChanged = false;
-
-            UseLegacyKp3ClientId = IsEmptyOauthCredentials;
             ChangesCommitted = false;
         }
 
@@ -269,44 +119,24 @@ namespace KPSyncForDrive
         public PwEntry CommitChangesIfAny()
         {
             EnsureSettingsMigration();
-            if (UseLegacyKp3ClientId)
-            {
-                // Traditionally, the plugin's indicator for "use default 
-                // clientId" is empty strings for clientId & secret.  Maintain
-                // that compatibility point.
-                ClientId = string.Empty;
-                ClientSecret = null;
-            }
             if (!IsModified)
             {
                 ChangesCommitted = false;
             }
             else
             {
-                // Handle client ID changes or legacy creds option toggle.
-                if (m_changes.Select(kv => kv.Key)
-                    .Any(k => k == EntryClientIdKey ||
-                        k == EntryUseLegacyCredsKey))
-                {
-                    // Show that credentials were changed
-                    m_credsChanged = true;
-                }
                 foreach (KeyValuePair<string, object> kv in m_changes)
                 {
                     switch (kv.Key)
                     {
-                        case EntryUseLegacyCredsKey:
                         case EntryActiveAccountKey:
-                        case EntryClientIdKey:
                         case EntryActiveAppFolderKey:
-                        case EntryDriveScopeKey:
                         case EntryVersionKey:
                         case EntryDontCacheAuthTokenKey:
                             string stringVal = kv.Value as string;
                             CustomData.Set(kv.Key, 
                                 stringVal == null ? string.Empty : stringVal);
                             break;
-                        case EntryClientSecretKey:
                         case EntryRefreshTokenKey:
                             ProtectedString ps = kv.Value as ProtectedString;
                             CustomData.Set(kv.Key,
@@ -346,14 +176,10 @@ namespace KPSyncForDrive
         {
             get
             {
-                return (m_changes.Keys.Any(k => k == EntryClientIdKey ||
-                                        k == EntryClientSecretKey ||
-                                        k == EntryUseLegacyCredsKey) &&
-                    !RefreshToken.IsNullOrEmpty()) ||
-                    (m_changes.Keys.Any(k =>
-                        k == EntryRefreshTokenKey) &&
-                    RefreshToken.IsNullOrEmpty() &&
-                    !Get(EntryRefreshTokenKey).IsNullOrEmpty());
+                return (m_changes.Keys.Any(k =>
+                            k == EntryRefreshTokenKey) &&
+                        RefreshToken.IsNullOrEmpty() &&
+                        !Get(EntryRefreshTokenKey).IsNullOrEmpty());
             }
         }
 
@@ -414,7 +240,7 @@ namespace KPSyncForDrive
             }
         }
 
-        public override string User
+        public string User
         {
             get
             {
@@ -422,29 +248,11 @@ namespace KPSyncForDrive
             }
         }
 
-        public override ProtectedString Password
+        public ProtectedString Password
         {
             get
             {
                 return Strings.Get(PwDefs.PasswordField);
-            }
-        }
-
-        public override string Title
-        {
-            get
-            {
-                if (m_title == null)
-                {
-                    m_title = Strings.ReadSafe(PwDefs.TitleField);
-                    string userName = User;
-                    if (!string.IsNullOrEmpty(userName))
-                    {
-                        m_title = string.Format("{0} - {1}",
-                                                userName, m_title);
-                    }
-                }
-                return m_title;
             }
         }
 
@@ -563,7 +371,7 @@ namespace KPSyncForDrive
             return null;
         }
 
-        public override bool? ActiveAccount
+        public bool? ActiveAccount
         {
             get
             {
@@ -595,34 +403,6 @@ namespace KPSyncForDrive
             }
         }
 
-        public override string ClientId
-        {
-            get
-            {
-                return GetValue(EntryClientIdKey, ReadSafe);
-            }
-            set
-            {
-                SetValue(EntryClientIdKey, value);
-            }
-        }
-
-        public override ProtectedString ClientSecret
-        {
-            get
-            {
-                // Use GetSafe so this property can be bound to
-                // SecureTextBoxEx.TextEx.
-                return GetValue(EntryClientSecretKey, GetSafe);
-            }
-            set
-            {
-                SetValue(EntryClientSecretKey, value);
-            }
-        }
-
-        public bool UseLegacyKp3ClientId { get; set; }
-        
         public override ProtectedString RefreshToken
         {
             get
@@ -646,47 +426,6 @@ namespace KPSyncForDrive
             set
             {
                 SetValue(EntryActiveAppFolderKey, value);
-            }
-        }
-
-        public override string LegacyDriveScope
-        {
-            get
-            {
-                return GetValue(EntryDriveScopeKey, ReadSafe);
-            }
-            set
-            {
-                SetValue(EntryDriveScopeKey, value);
-            }
-        }
-
-        public bool IsLegacyRestrictedDriveScope
-        {
-            get
-            {
-                return string.IsNullOrEmpty(LegacyDriveScope) ||
-                    LegacyDriveScope == DriveService.Scope.Drive;
-            }
-            set
-            {
-                LegacyDriveScope = value ?
-                    DriveService.Scope.Drive : DriveService.Scope.DriveFile;
-            }
-        }
-
-        // Custom or KP3 app creds.
-        public override bool UseLegacyCreds
-        {
-            get
-            {
-                return GdsDefs.ConfigTrue ==
-                    GetValue(EntryUseLegacyCredsKey, ReadSafe);
-            }
-            set
-            {
-                SetValue(EntryUseLegacyCredsKey,
-                    value ? GdsDefs.ConfigTrue : GdsDefs.ConfigFalse);
             }
         }
 

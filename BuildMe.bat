@@ -26,7 +26,7 @@ set archname=KPSyncForDrive
 set kp_version_manifest_name=kpsync_final
 set versionPrefix=4.1.0
 set versionSuffix=unstable
-set netsdkver=net45
+set netsdkver=net48
 
 set sevenzip="%ProgramFiles%\7-Zip\7z.exe"
 :: set dotnetPgm="%ProgramFiles%\dotnet\dotnet.exe"

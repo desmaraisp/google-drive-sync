@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="">
+<head>
+    <meta charset="utf-8"/>
+    <title>Google Drive File Picker</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #picker_button {
+            width: fit-content;
+        }
+    </style>
+    <script type="text/javascript">
+        var developerKey = "@GDrivePickerApiKey";
+        var appId = "@AppId";
+        var accessToken = "@AccessToken"
+
+        function createPicker() {
+            var view = new google.picker.DocsView(google.picker.ViewId.DOCS)
+                .setMode(google.picker.DocsViewMode.LIST)
+                .setIncludeFolders(true)
+                .setOwnedByMe(true)
+                .setSelectFolderEnabled(true);
+            
+            var picker = new google.picker.PickerBuilder()
+                .enableFeature(google.picker.Feature.NAV_HIDDEN)
+                .setAppId(appId)
+                .addView(view)
+                .setOAuthToken(accessToken)
+                .addView(new google.picker.View(google.picker.ViewId.DOCS))
+                .setDeveloperKey(developerKey)
+                .setCallback(pickerCallback)
+                .build();
+            picker.setVisible(true);
+        }
+
+        // A simple callback implementation.
+        function pickerCallback(data) {
+            if (data.action === google.picker.Action.PICKED) {
+                const {id, name} = data.docs[0];
+                fetch("/", {
+                    method: "POST",
+                    body: JSON.stringify({id, name}),
+                })
+                    .then(() => {
+                        console.log('closing window');
+                        window.close();
+                    })
+                    .catch(() => alert("Failed to send information to KeePass"));
+            }
+        }
+    </script>
+</head>
+<body>
+
+<!-- The Google API Loader script. -->
+<script src="https://apis.google.com/js/api.js" onload="gapi.load('picker', createPicker)"></script>
+</body>
+</html>

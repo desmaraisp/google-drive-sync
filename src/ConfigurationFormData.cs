@@ -20,9 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-using Google.Apis.Drive.v3;
 using KeePassLib;
-using KeePassLib.Security;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -30,6 +28,8 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using FilePicker;
+using Microsoft.CodeAnalysis;
 
 namespace KPSyncForDrive
 {
@@ -40,13 +40,16 @@ namespace KPSyncForDrive
         public delegate Task<IEnumerable<Color>> ColorProvider(
             EntryConfiguration ec, DatabaseContext dbCtx);
 
+        public delegate Task<Optional<FilePick>> FilePickerDelegate(EntryConfiguration ec);
+
         IEnumerable<Color> m_colors;
         readonly ColorProvider m_colorProvider;
+        readonly FilePickerDelegate _mPickerDelegate;
         readonly PwDatabase m_db;
         PluginConfig m_config;
 
         public ConfigurationFormData(IList<EntryConfiguration> entries,
-            ColorProvider colorProvider, PwDatabase db)
+            ColorProvider colorProvider, FilePickerDelegate pickerDelegate, PwDatabase db)
         {
             Entries = entries;
             EntryBindingSource = new BindingSource
@@ -56,11 +59,8 @@ namespace KPSyncForDrive
 
             m_colors = null;
             m_colorProvider = colorProvider;
+            _mPickerDelegate = pickerDelegate;
             m_db = db;
-            DefaultUseKpgs3ClientId = 
-                SyncConfiguration.IsEmpty(
-                    PluginConfig.Default.PersonalClientId,
-                    PluginConfig.Default.PersonalClientSecret);
             m_config = PluginConfig.GetCopyOfDefault();
         }
 
@@ -212,109 +212,6 @@ namespace KPSyncForDrive
             }
         }
 
-        public bool DefaultIsLegacyRestrictedDriveScope
-        {
-            get
-            {
-                return m_config.LegacyDriveScope ==
-                    DriveService.Scope.Drive;
-            }
-            set
-            {
-                if (DefaultIsLegacyRestrictedDriveScope != value)
-                {
-                    m_config.LegacyDriveScope = value ?
-                        DriveService.Scope.Drive : DriveService.Scope.DriveFile;
-                    RaisePropertyChanged("DefaultIsLegacyRestrictedDriveScope");
-                }
-            }
-        }
-
-        public string DefaultLegacyClientId
-        {
-            get
-            {
-                return DefaultUseKpgs3ClientId ?
-                    string.Empty : m_config.PersonalClientId;
-            }
-            set
-            {
-                if (DefaultLegacyClientId != value)
-                {
-                    m_config.PersonalClientId = value;
-                    RaisePropertyChanged("DefaultLegacyClientId");
-                }
-            }
-        }
-
-        public ProtectedString DefaultLegacyClientSecret
-        {
-            get
-            {
-                return DefaultUseKpgs3ClientId ?
-                    GdsDefs.PsEmptyEx : m_config.PersonalClientSecret;
-            }
-            set
-            {
-                if (!DefaultLegacyClientSecret.OrdinalEquals(value, false))
-                {
-                    m_config.PersonalClientSecret = value == null ?
-                        GdsDefs.PsEmptyEx : value;
-                    RaisePropertyChanged("DefaultLegacyClientSecret");
-                }
-            }
-        }
-
-        public bool DefaultUseKpgs3ClientId { get; set; }
-
-        public bool DefaultUseLegacyCredentials
-        {
-            get
-            {
-                return m_config.UseLegacyAppCredentials;
-            }
-            set
-            {
-                if (m_config.UseLegacyAppCredentials != value)
-                {
-                    m_config.UseLegacyAppCredentials = value;
-                    RaisePropertyChanged("DefaultUseLegacyCredentials");
-                }
-            }
-        }
-
-        public bool DefaultDontSaveAuthToken
-        {
-            get
-            {
-                return m_config.DontSaveAuthToken;
-            }
-            set
-            {
-                if (m_config.DontSaveAuthToken != value)
-                {
-                    m_config.DontSaveAuthToken = value;
-                    RaisePropertyChanged("DefaultDontSaveAuthToken");
-                }
-            }
-        }
-
-        public bool WarnOnSavedAuthToken
-        {
-            get
-            {
-                return m_config.WarnOnSavedAuthToken;
-            }
-            set
-            {
-                if (m_config.WarnOnSavedAuthToken != value)
-                {
-                    m_config.WarnOnSavedAuthToken = value;
-                    RaisePropertyChanged("WarnOnSavedAuthToken");
-                }
-            }
-        }
-
         public bool AutoResumeSaveSync
         {
             get
@@ -354,6 +251,11 @@ namespace KPSyncForDrive
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propName));
             }
+        }
+
+        public async Task PickFile()
+        {
+            await _mPickerDelegate(EntryBindingSource.Current as EntryConfiguration);
         }
     }
 }

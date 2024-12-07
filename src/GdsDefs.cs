@@ -31,28 +31,6 @@ namespace KPSyncForDrive
         static string s_productName;
         static string s_productVersion;
         static ProtectedString s_emptyEx;
-        static ProtectedString s_legacyClientId;
-        static ProtectedString s_legacyClientSecret;
-        static ProtectedString s_currentClientId;
-        static ProtectedString s_currentClientSecret;
-
-        static ProtectedString GetData(byte[] data, byte[] pad)
-        {
-            XorredBuffer buf = null;
-            try
-            {
-                buf = new XorredBuffer(data, pad);
-                return new ProtectedString(true, buf);
-            }
-            finally
-            {
-                // $$REVIEW
-                // XorredBuffer isn't IDisposable until sometime after KeePass
-                // v2.35, so fool the compiler and dispose if necessary.
-                object unknown = buf;
-                using (IDisposable disposable = unknown as IDisposable) { }
-            }
-        }
 
         public static string ProductName
         {
@@ -68,14 +46,6 @@ namespace KPSyncForDrive
                     s_productName = assemblyTitle.Title;
                 }
                 return s_productName;
-            }
-        }
-
-        public static string ProductAttributedTitle
-        {
-            get
-            {
-                return "KPSync for Google Drive™";
             }
         }
 
@@ -115,63 +85,7 @@ namespace KPSyncForDrive
         {
             get
             {
-                return string.Format(UrlUpdateFormat, GitHubProjectName);
-            }
-        }
-
-        public static ProtectedString ClientSecret
-        {
-            get
-            {
-                if (s_currentClientSecret == null)
-                {
-                    s_currentClientSecret = GetData(
-                        s_clientSecretBytes,
-                        s_clientSecretPad);
-                }
-                return s_currentClientSecret;
-            }
-        }
-
-        public static ProtectedString ClientId
-        {
-            get
-            {
-                if (s_currentClientId == null)
-                {
-                    s_currentClientId = GetData(
-                        s_clientIdBytes,
-                        s_clientIdPad);
-                }
-                return s_currentClientId;
-            }
-        }
-
-        public static ProtectedString LegacyClientSecret
-        {
-            get
-            {
-                if (s_legacyClientSecret == null)
-                {
-                    s_legacyClientSecret = GetData(
-                        s_legacyClientSecretBytes,
-                        s_legacyClientSecretPad);
-                }
-                return s_legacyClientSecret;
-            }
-        }
-
-        public static ProtectedString LegacyClientId
-        {
-            get
-            {
-                if (s_legacyClientId == null)
-                {
-                    s_legacyClientId = GetData(
-                        s_legacyClientIdBytes,
-                        s_legacyClientIdPad);
-                }
-                return s_legacyClientId;
+                return UrlUpdateFormat;
             }
         }
 
@@ -185,7 +99,6 @@ namespace KPSyncForDrive
         public const string UrlDomainRoot = "kpsync.org";
         public const string UrlDomain = "www." + UrlDomainRoot;
         public const string UrlHome = "https://" + UrlDomain;
-        public const string UrlLegacyHome = "https://sourceforge.net/p/kp-googlesync";
         public const string UrlHelp = UrlHome;
         public const string UrlGoogleDev = "https://console.developers.google.com/start";
         public const string UrlGoogleDrive = "https://drive.google.com";
@@ -197,8 +110,6 @@ namespace KPSyncForDrive
         public const string UrlUpgradeV1 = UrlHome + "/install/upgrade1";
         public const string UrlPrivacy = UrlHome + "/privacy";
         public const string GsyncBackupExt = ".gsyncbak";
-        public const string AppDefaultFolderName = "KeePass Sync";
-        public const string AppFolderColor = "#4986e7"; // "Rainy Sky"
         public const string MimeTypeFolder = "application/vnd.google-apps.folder";
         public const string MimeTypeShortcut = "application/vnd.google-apps.shortcut";
         public const int DefaultDotNetFileBufferSize = 4096;
