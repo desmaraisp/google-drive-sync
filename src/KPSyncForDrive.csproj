@@ -44,6 +44,7 @@
       Include="..\lib\src\CompileTimeConfigPublicMembers\CompileTimeConfigPublicMembers.csproj" />
     <ProjectReference OutputItemType="Analyzer" ReferenceOutputAssembly="false"
       Include="..\lib\src\CompileTimeConfigGenerator\CompileTimeConfigGenerator.csproj" />
+    <ProjectReference Include="..\lib\src\FilePicker\FilePicker.csproj" />
     <ProjectReference Include="..\lib\src\WindowsControls\WindowsControls.csproj" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Windows.Forms" />
