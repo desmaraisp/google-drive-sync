@@ -6,11 +6,11 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <Product>KeePass Plugin</Product>
     <AssemblyTitle>KPSync For Google Drive</AssemblyTitle>
     <Description>Safely synchronize KeePass database files with Google Drive.</Description>
-    <Copyright>Copyright ©  2020-2021</Copyright>
+    <Copyright>Copyright © 2020-2021</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
     <ApplicationIcon>Images\gdsync.ico</ApplicationIcon>
     <PlatformTarget Condition=" '$(PlatformTarget)' == '' ">AnyCPU</PlatformTarget>
@@ -33,16 +33,15 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Net.Http" />
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.51.0.2265" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3601" />
     <PackageReference Include="PlgxBuildTasks" Version="1.1.1-beta" />
-    <PackageReference Include="Serilog" Version="2.10.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
+    <PackageReference Include="Serilog" Version="3.1.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <Reference Include="KeePass.exe">
       <HintPath>..\lib\bin\KeePass.exe</HintPath>
       <Private>False</Private>
     </Reference>
     <!-- Before upgrading check Google.Apis.* dependency. -->
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -71,6 +70,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>GdsDefs.Data.tt</DependentUpon>
     </Compile>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -133,9 +133,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="app.config">
-      <ExcludeFromPlgx />
-    </None>
     <None Update="GdsDefs.OAuthCreds.txt">
       <ExcludeFromPlgx />
     </None>
@@ -150,9 +147,8 @@
   -->
 
   <!-- Embed version number in .PLGX name-->
-  <Target Name="KpSyncSetPlgxFileName"
-          BeforeTargets="SetPlgxOutputPath"
-          Outputs="PlgxArchiveFileName">
+  <Target Name="KpSyncSetPlgxFileName" BeforeTargets="SetPlgxOutputPath"
+    Outputs="PlgxArchiveFileName">
     <PropertyGroup>
       <PlgxArchiveFileName>$(AssemblyName)-$(Version)</PlgxArchiveFileName>
     </PropertyGroup>
