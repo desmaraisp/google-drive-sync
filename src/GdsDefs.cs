@@ -21,7 +21,6 @@
 **/
 
 using KeePassLib.Security;
-using System;
 using System.Reflection;
 
 namespace KPSyncForDrive
@@ -35,24 +34,6 @@ namespace KPSyncForDrive
         static ProtectedString s_legacyClientSecret;
         static ProtectedString s_currentClientId;
         static ProtectedString s_currentClientSecret;
-
-        static ProtectedString GetData(byte[] data, byte[] pad)
-        {
-            XorredBuffer buf = null;
-            try
-            {
-                buf = new XorredBuffer(data, pad);
-                return new ProtectedString(true, buf);
-            }
-            finally
-            {
-                // $$REVIEW
-                // XorredBuffer isn't IDisposable until sometime after KeePass
-                // v2.35, so fool the compiler and dispose if necessary.
-                object unknown = buf;
-                using (IDisposable disposable = unknown as IDisposable) { }
-            }
-        }
 
         public static string ProductName
         {
@@ -125,9 +106,7 @@ namespace KPSyncForDrive
             {
                 if (s_currentClientSecret == null)
                 {
-                    s_currentClientSecret = GetData(
-                        s_clientSecretBytes,
-                        s_clientSecretPad);
+                    s_currentClientSecret = ProtectedString.Empty;
                 }
                 return s_currentClientSecret;
             }
@@ -139,9 +118,7 @@ namespace KPSyncForDrive
             {
                 if (s_currentClientId == null)
                 {
-                    s_currentClientId = GetData(
-                        s_clientIdBytes,
-                        s_clientIdPad);
+                    s_currentClientId = ProtectedString.Empty;
                 }
                 return s_currentClientId;
             }
@@ -153,9 +130,7 @@ namespace KPSyncForDrive
             {
                 if (s_legacyClientSecret == null)
                 {
-                    s_legacyClientSecret = GetData(
-                        s_legacyClientSecretBytes,
-                        s_legacyClientSecretPad);
+                    s_legacyClientSecret = ProtectedString.Empty;
                 }
                 return s_legacyClientSecret;
             }
@@ -167,9 +142,7 @@ namespace KPSyncForDrive
             {
                 if (s_legacyClientId == null)
                 {
-                    s_legacyClientId = GetData(
-                        s_legacyClientIdBytes,
-                        s_legacyClientIdPad);
+                    s_legacyClientId = ProtectedString.Empty;
                 }
                 return s_legacyClientId;
             }

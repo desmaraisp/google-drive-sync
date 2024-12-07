@@ -16,8 +16,6 @@
     <PlatformTarget Condition=" '$(PlatformTarget)' == '' ">AnyCPU</PlatformTarget>
     <LangVersion>5</LangVersion>
     <UseWindowsForms>true</UseWindowsForms>
-    <GenClientIdFolder>$(MSBuildProjectDirectory)\..\lib\src\GenClientId\bin\$(Configuration)\$(TargetFramework)\</GenClientIdFolder>
-    <ClientIdSrcFolder>$(MSBuildProjectDirectory)\</ClientIdSrcFolder>
     <TransformOnBuild>true</TransformOnBuild>
     <TransformOutOfDateOnly>true</TransformOutOfDateOnly>
     <Satellite_ProductName>KeePass Plugin Satellite Resources</Satellite_ProductName>
@@ -40,6 +38,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="2.8.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <ProjectReference
       Include="..\lib\src\CompileTimeConfigPublicMembers\CompileTimeConfigPublicMembers.csproj" />
     <ProjectReference OutputItemType="Analyzer" ReferenceOutputAssembly="false"
@@ -58,34 +58,6 @@
       <Private>False</Private>
     </Reference>
     <!-- Before upgrading check Google.Apis.* dependency. -->
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- This is the T4 template transformer service marker. -->
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}">
-      <ExcludeFromPlgx>true</ExcludeFromPlgx>
-    </Service>
-    <None Update="GdsDefs.Data.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>GdsDefs.Data.cs</LastGenOutput>
-      <Visible>true</Visible>
-      <ExcludeFromPlgx>true</ExcludeFromPlgx>
-    </None>
-    <T4ParameterValues Include="ClientIdSrcFolder">
-      <Value>$(ClientIdSrcFolder)</Value>
-      <Visible>false</Visible>
-      <ExcludeFromPlgx>true</ExcludeFromPlgx>
-    </T4ParameterValues>
-    <T4ParameterValues Include="GenClientIdFolder">
-      <Value>$(GenClientIdFolder)</Value>
-      <Visible>false</Visible>
-      <ExcludeFromPlgx>true</ExcludeFromPlgx>
-    </T4ParameterValues>
-    <Compile Update="GdsDefs.Data.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>GdsDefs.Data.tt</DependentUpon>
-    </Compile>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
@@ -146,12 +118,6 @@
     <EmbeddedResource Update="Strings.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="GdsDefs.OAuthCreds.txt">
-      <ExcludeFromPlgx />
-    </None>
   </ItemGroup>
 
   <!-- ===== This is for PlgxBuildTasks dev building, etc. Remove <PackageReference> above. =====
