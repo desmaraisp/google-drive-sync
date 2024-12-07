@@ -22,13 +22,28 @@
     <TransformOutOfDateOnly>true</TransformOutOfDateOnly>
     <Satellite_ProductName>KeePass Plugin Satellite Resources</Satellite_ProductName>
     <PlgxTargetKpVersion>2.35</PlgxTargetKpVersion>
+    <CompileTimeConfig_ClientId>DevClientId</CompileTimeConfig_ClientId>
+    <CompileTimeConfig_DriveFilePickerPublicApiKey>DevPublicApiKey</CompileTimeConfig_DriveFilePickerPublicApiKey>
+    <CompileTimeConfig_GoogleDrivePickerAppId>DevAppId</CompileTimeConfig_GoogleDrivePickerAppId>
+    <CompileTimeConfig_PublicClientSecret>DevClientSecret</CompileTimeConfig_PublicClientSecret>
   </PropertyGroup>
+
+  <ItemGroup>
+    <CompilerVisibleProperty Include="CompileTimeConfig_ClientId" />
+    <CompilerVisibleProperty Include="CompileTimeConfig_GoogleDrivePickerAppId" />
+    <CompilerVisibleProperty Include="CompileTimeConfig_DriveFilePickerPublicApiKey" />
+    <CompilerVisibleProperty Include="CompileTimeConfig_PublicClientSecret" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference
+      Include="..\lib\src\CompileTimeConfigPublicMembers\CompileTimeConfigPublicMembers.csproj" />
+    <ProjectReference OutputItemType="Analyzer" ReferenceOutputAssembly="false"
+      Include="..\lib\src\CompileTimeConfigGenerator\CompileTimeConfigGenerator.csproj" />
     <ProjectReference Include="..\lib\src\WindowsControls\WindowsControls.csproj" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Windows.Forms" />
