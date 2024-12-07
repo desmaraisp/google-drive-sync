@@ -21,6 +21,7 @@
 **/
 
 using KeePassLib.Security;
+using System;
 using System.Reflection;
 
 namespace KPSyncForDrive
@@ -30,10 +31,6 @@ namespace KPSyncForDrive
         static string s_productName;
         static string s_productVersion;
         static ProtectedString s_emptyEx;
-        static ProtectedString s_legacyClientId;
-        static ProtectedString s_legacyClientSecret;
-        static ProtectedString s_currentClientId;
-        static ProtectedString s_currentClientSecret;
 
         public static string ProductName
         {
@@ -49,14 +46,6 @@ namespace KPSyncForDrive
                     s_productName = assemblyTitle.Title;
                 }
                 return s_productName;
-            }
-        }
-
-        public static string ProductAttributedTitle
-        {
-            get
-            {
-                return "KPSync for Google Drive™";
             }
         }
 
@@ -96,55 +85,7 @@ namespace KPSyncForDrive
         {
             get
             {
-                return string.Format(UrlUpdateFormat, GitHubProjectName);
-            }
-        }
-
-        public static ProtectedString ClientSecret
-        {
-            get
-            {
-                if (s_currentClientSecret == null)
-                {
-                    s_currentClientSecret = ProtectedString.Empty;
-                }
-                return s_currentClientSecret;
-            }
-        }
-
-        public static ProtectedString ClientId
-        {
-            get
-            {
-                if (s_currentClientId == null)
-                {
-                    s_currentClientId = ProtectedString.Empty;
-                }
-                return s_currentClientId;
-            }
-        }
-
-        public static ProtectedString LegacyClientSecret
-        {
-            get
-            {
-                if (s_legacyClientSecret == null)
-                {
-                    s_legacyClientSecret = ProtectedString.Empty;
-                }
-                return s_legacyClientSecret;
-            }
-        }
-
-        public static ProtectedString LegacyClientId
-        {
-            get
-            {
-                if (s_legacyClientId == null)
-                {
-                    s_legacyClientId = ProtectedString.Empty;
-                }
-                return s_legacyClientId;
+                return UrlUpdateFormat;
             }
         }
 
@@ -158,7 +99,6 @@ namespace KPSyncForDrive
         public const string UrlDomainRoot = "kpsync.org";
         public const string UrlDomain = "www." + UrlDomainRoot;
         public const string UrlHome = "https://" + UrlDomain;
-        public const string UrlLegacyHome = "https://sourceforge.net/p/kp-googlesync";
         public const string UrlHelp = UrlHome;
         public const string UrlGoogleDev = "https://console.developers.google.com/start";
         public const string UrlGoogleDrive = "https://drive.google.com";
@@ -170,8 +110,6 @@ namespace KPSyncForDrive
         public const string UrlUpgradeV1 = UrlHome + "/install/upgrade1";
         public const string UrlPrivacy = UrlHome + "/privacy";
         public const string GsyncBackupExt = ".gsyncbak";
-        public const string AppDefaultFolderName = "KeePass Sync";
-        public const string AppFolderColor = "#4986e7"; // "Rainy Sky"
         public const string MimeTypeFolder = "application/vnd.google-apps.folder";
         public const string MimeTypeShortcut = "application/vnd.google-apps.shortcut";
         public const int DefaultDotNetFileBufferSize = 4096;

@@ -28,7 +28,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace KPSyncForDrive
@@ -47,9 +47,6 @@ namespace KPSyncForDrive
         {
             InitializeComponent();
             
-            EnsureCheckEnabledGroupBox(m_chkDefaultUseLegacyCreds,
-                                        m_grpDriveAuthDefaults);
-            EnsureCheckEnabledGroupBox(m_chkUseLegacyCreds, m_grpDriveAuth);
 
             Text = GdsDefs.ProductName;
             DatabaseFilePath = string.Empty;
@@ -66,10 +63,6 @@ namespace KPSyncForDrive
                 m_grpEntry,
                 m_grpDriveAuth,
                 m_lblAccount,
-                m_lblClientId,
-                m_lblClientSecret,
-                m_chkDriveScope,
-                m_chkLegacyClientId,
                 m_grpDriveOptions,
                 m_lblHintFolder,
                 m_lblFolder,
@@ -83,17 +76,11 @@ namespace KPSyncForDrive
                 m_grpAutoSync,
                 m_chkSyncOnOpen,
                 m_chkSyncOnSave,
-                m_lblDefaultClientId,
-                m_lblDefaultClientSecret,
-                m_chkDefaultDriveScope,
-                m_chkDefaultLegacyClientId,
                 m_grpFolderDefaults,
                 m_lblHintDefaultFolder,
                 m_lblDefaultFolderLabel,
                 m_lblDefFolderColor,
                 m_btnGetColors,
-                m_chkDefaultUseLegacyCreds,
-                m_chkUseLegacyCreds,
                 m_grpAuthTokenSecurityDefaults,
                 m_chkDontSaveAuthDefault,
                 m_chkWarnAuthToken,
@@ -102,11 +89,16 @@ namespace KPSyncForDrive
                 m_chkDontSaveAuthToken,
                 m_lnkAuthTokenHelp,
                 m_chkSyncOnReopen,
+                AuthorizeFiles_btn,
+                AuthorizeFiles_label
             };
             foreach (Control c in textCx)
             {
                 c.Text = Resources.GetString(c.Text);
             }
+
+            m_grpDriveAuth.Text = Strings.AuthorizeFiles_sectionHeader;
+            AuthorizeFiles_tooltip.SetToolTip(AuthorizeFiles_btn, Strings.AuthorizeFiles_tooltip);
 
             m_data = data;
 
@@ -141,24 +133,6 @@ namespace KPSyncForDrive
             m_bColorsQueried = false;
         }
 
-        static void EnsureCheckEnabledGroupBox(CheckBox chk, GroupBox grp)
-        {
-            grp.Enabled = chk.Checked;
-            if (chk.Parent == grp)
-            {
-                // Move checkbox to the groupbox parent.
-                grp.Parent.Controls.Add(chk);
-
-                // Translate position relative to parent.
-                chk.Location = new Point(
-                    chk.Left + grp.Left,
-                    chk.Top + grp.Top);
-
-                // Checkbox covers the groupbox.
-                chk.BringToFront();
-            }
-        }
-
         // Do most event and binding stitching here because KeePass likes to
         // dispose forms quickly.  Also, the presentation object can change
         // before the form is shown.
@@ -172,55 +146,11 @@ namespace KPSyncForDrive
             m_cbAccount.ValueMember = "Entry";
 
             // Entry sync config controls.
-            Binding binding;
-            Debug.Assert(m_txtClientId is TextBox);
-            binding = new Binding("Text",
-                bindingSource,
-                "ClientId");
-            m_txtClientId.DataBindings.Add(binding);
-            binding = new Binding("Enabled",
-                bindingSource,
-                "UseLegacyKp3ClientId", true);
-            binding.Format += HandleBoolNegation;
-            binding.Parse += HandleBoolNegation;
-            m_txtClientId.DataBindings.Add(binding);
-            Debug.Assert(m_txtClientSecret is TextBox);
-            binding = new Binding("Text",
-                bindingSource,
-                "ClientSecret", true);
-            binding.Format += HandleProtectedStringFormatting;
-            binding.Parse += HandleProtectedStringParsing;
-            m_txtClientSecret.DataBindings.Add(binding);
-            binding = new Binding("Enabled",
-                bindingSource,
-                "UseLegacyKp3ClientId", true);
-            binding.Format += HandleBoolNegation;
-            binding.Parse += HandleBoolNegation;
-            m_txtClientSecret.DataBindings.Add(binding);
             Debug.Assert(m_txtFolder is TextBox);
-            binding = new Binding("Text",
+            var binding = new Binding("Text",
                 bindingSource,
                 "ActiveFolder");
             m_txtFolder.DataBindings.Add(binding);
-            Debug.Assert(m_chkDriveScope is CheckBox);
-            binding = new Binding("Checked",
-                bindingSource,
-                "IsLegacyRestrictedDriveScope", true);
-            binding.Format += HandleBoolNegation;
-            binding.Parse += HandleBoolNegation;
-            m_chkDriveScope.DataBindings.Add(binding);
-            Debug.Assert(m_chkLegacyClientId is CheckBox);
-            binding = new Binding("Checked",
-                bindingSource,
-                "UseLegacyKp3ClientId");
-            binding.DataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
-            m_chkLegacyClientId.DataBindings.Add(binding);
-            Debug.Assert(m_chkUseLegacyCreds is CheckBox);
-            binding = new Binding("Checked",
-                bindingSource,
-                "UseLegacyCreds");
-            binding.DataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
-            m_chkUseLegacyCreds.DataBindings.Add(binding);
             Debug.Assert(m_chkDontSaveAuthToken is CheckBox);
             binding = new Binding("Checked", bindingSource,
                 "DontSaveAuthToken");
@@ -232,43 +162,6 @@ namespace KPSyncForDrive
             binding = new Binding("Text",
                 m_data, "DefaultAppFolder");
             m_txtFolderDefault.DataBindings.Add(binding);
-            Debug.Assert(m_chkDefaultDriveScope is CheckBox);
-            binding = new Binding("Checked",
-                m_data, "DefaultIsLegacyRestrictedDriveScope");
-            binding.Format += HandleBoolNegation;
-            binding.Parse += HandleBoolNegation;
-            m_chkDefaultDriveScope.DataBindings.Add(binding);
-            Debug.Assert(m_txtDefaultClientId is TextBox);
-            binding = new Binding("Text",
-                m_data, "DefaultLegacyClientId");
-            m_txtDefaultClientId.DataBindings.Add(binding);
-            binding = new Binding("Enabled",
-                m_data, "DefaultUseKpgs3ClientId", true);
-            binding.Format += HandleBoolNegation;
-            binding.Parse += HandleBoolNegation;
-            m_txtDefaultClientId.DataBindings.Add(binding);
-            Debug.Assert(m_txtDefaultClientSecret is TextBox);
-            binding = new Binding("Text", m_data,
-                "DefaultLegacyClientSecret", true);
-            binding.Format += HandleProtectedStringFormatting;
-            binding.Parse += HandleProtectedStringParsing;
-            m_txtDefaultClientSecret.DataBindings.Add(binding);
-            binding = new Binding("Enabled",
-                m_data, "DefaultUseKpgs3ClientId", true);
-            binding.Format += HandleBoolNegation;
-            binding.Parse += HandleBoolNegation;
-            m_txtDefaultClientSecret.DataBindings.Add(binding);
-            Debug.Assert(m_chkDefaultLegacyClientId is CheckBox);
-            binding = new Binding("Checked",
-                m_data, "DefaultUseKpgs3ClientId");
-            binding.DataSourceUpdateMode = 
-                DataSourceUpdateMode.OnPropertyChanged;
-            m_chkDefaultLegacyClientId.DataBindings.Add(binding);
-            binding = new Binding("Checked",
-                m_data, "DefaultUseLegacyCredentials");
-            binding.DataSourceUpdateMode =
-                DataSourceUpdateMode.OnPropertyChanged;
-            m_chkDefaultUseLegacyCreds.DataBindings.Add(binding);
 
             // Enabled command controls.
             Debug.Assert(m_chkSyncEnabled is CheckBox);
@@ -428,7 +321,7 @@ namespace KPSyncForDrive
         {
             CheckBox cb = sender as CheckBox;
             Debug.Assert(cb != null, "invalid sender");
-            if (cb != null && !cb.Checked)
+            if (!cb.Checked)
             {
                 cb.Checked = !m_chkDownloadEnabled.Checked &&
                     !m_chkUploadEnabled.Checked &&
@@ -529,8 +422,6 @@ namespace KPSyncForDrive
             catch (Exception e)
             {
                 Debug.Fail(e.ToString());
-                m_cbColors.Items.AddRange(
-                    new object[] { new GoogleColor(Color.DimGray) });
             }
             finally
             {
@@ -612,30 +503,21 @@ namespace KPSyncForDrive
 
         bool EntryClientIdStateIsValid()
         {
-            // Unless legacy checked, client & secret must have something.
-            return m_chkLegacyClientId.Checked ||
-                !string.IsNullOrEmpty(m_txtClientId.Text.Trim()) &&
-                !string.IsNullOrEmpty(m_txtClientSecret.Text.Trim());
+            // Deprecated, always returns valid because the underlying item no longer exists
+            return true;
         }
 
         bool DefaultClientIdStateIsValid()
         {
-            // Unless legacy checked, client & secret must have something.
-            return m_chkDefaultLegacyClientId.Checked ||
-                !string.IsNullOrEmpty(m_txtDefaultClientId.Text.Trim()) &&
-                !string.IsNullOrEmpty(m_txtDefaultClientSecret.Text.Trim());
+            // Deprecated, always returns valid because the underlying item no longer exists
+            return true;
         }
 
         public string DatabaseFilePath { get; set; }
 
-        void m_chkDefaultUseLegacyCreds_CheckedChanged(object sender, EventArgs e)
+        private async void HandleAuthorizeFilesAction(object sender, EventArgs e)
         {
-            m_grpDriveAuthDefaults.Enabled = m_chkDefaultUseLegacyCreds.Checked;
-        }
-
-        private void m_chkUseLegacyCreds_CheckedChanged(object sender, EventArgs e)
-        {
-            m_grpDriveAuth.Enabled = m_chkUseLegacyCreds.Checked;
+            await m_data.PickFile();
         }
     }
 }

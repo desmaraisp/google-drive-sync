@@ -27,7 +27,6 @@ using System.IO;
 using System.Text;
 using Google.Apis.Drive.v3;
 using KeePass.Plugins;
-using KeePassLib.Security;
 using Newtonsoft.Json;
 
 namespace KPSyncForDrive
@@ -55,31 +54,6 @@ namespace KPSyncForDrive
 
         public const string CurrentVer = "1.1";
         const string ConfigPluginKey = "Plugin.KeePassSyncForDrive";
-
-        class ProtectedStringConverter : JsonConverter<ProtectedString>
-        {
-            public override ProtectedString ReadJson(JsonReader reader,
-                Type objectType, ProtectedString existingValue,
-                bool hasExistingValue, JsonSerializer serializer)
-            {
-                string stringVal = reader.Value as string;
-                return !string.IsNullOrEmpty(stringVal) ?
-                    new ProtectedString(true, stringVal) : null;
-            }
-
-            public override void WriteJson(JsonWriter writer,
-                ProtectedString value, JsonSerializer serializer)
-            {
-                if (value == null || value == GdsDefs.PsEmptyEx)
-                {
-                    writer.WriteNull();
-                }
-                else
-                {
-                    writer.WriteValue(value.ReadString());
-                }
-            }
-        }
 
         class ColorConverter : JsonConverter<GoogleColor>
         {
@@ -131,10 +105,6 @@ namespace KPSyncForDrive
         SyncCommands m_enabledCmds;
         string m_defaultFolder;
         GoogleColor m_defaultFolderColor;
-        string m_defaultDriveScope;
-        string m_defaultClientId;
-        ProtectedString m_defaultClientSecret;
-        bool m_useLegacyCreds;
         bool m_dontSaveAuthToken;
         bool m_warnSavedAuthToken;
         bool m_isDirty;
@@ -145,16 +115,12 @@ namespace KPSyncForDrive
         {
             m_autoSync = AutoSyncMode.DISABLED;
             m_enabledCmds = SyncCommands.All;
-            m_defaultFolder = null;
+            m_defaultFolder = "";
             m_defaultFolderColor = null;
-            m_defaultDriveScope = null;
-            m_defaultClientId = string.Empty;
-            m_defaultClientSecret = GdsDefs.PsEmptyEx;
-            m_useLegacyCreds = false;
             m_dontSaveAuthToken = false;
             m_warnSavedAuthToken = false;
             m_isDirty = true;
-            m_ver = null;
+            m_ver = "";
             m_autoResumeSave = false;
         }
 
@@ -164,10 +130,6 @@ namespace KPSyncForDrive
             m_enabledCmds = c.m_enabledCmds;
             m_defaultFolder = c.m_defaultFolder;
             m_defaultFolderColor = c.m_defaultFolderColor;
-            m_defaultDriveScope = c.m_defaultDriveScope;
-            m_defaultClientId = c.m_defaultClientId;
-            m_defaultClientSecret = c.m_defaultClientSecret;
-            m_useLegacyCreds = c.m_useLegacyCreds;
             m_dontSaveAuthToken = c.m_dontSaveAuthToken;
             m_warnSavedAuthToken = c.m_warnSavedAuthToken;
             m_isDirty = c.m_isDirty;
@@ -278,71 +240,6 @@ namespace KPSyncForDrive
                         StringComparison.Ordinal);
                 }
                 m_defaultFolderColor = value;
-            }
-        }
-
-        public string LegacyDriveScope
-        {
-            get { return m_defaultDriveScope; }
-            set
-            {
-                if (!string.Equals(m_defaultDriveScope, value,
-                        StringComparison.Ordinal))
-                {
-                    m_defaultDriveScope = value;
-                    m_isDirty = true;
-                }
-            }
-        }
-
-        public string PersonalClientId
-        {
-            get { return m_defaultClientId; }
-            set
-            {
-                if (!string.Equals(m_defaultClientId, value,
-                        StringComparison.Ordinal))
-                {
-                    m_defaultClientId = value;
-                    m_isDirty = true;
-                }
-            }
-        }
-
-        [JsonConverter(typeof(ProtectedStringConverter))]
-        public ProtectedString PersonalClientSecret
-        {
-            get { return m_defaultClientSecret; }
-            set
-            {
-                if (value == null)
-                {
-                    if (m_defaultClientSecret == null)
-                    {
-                        return;
-                    }
-                    m_defaultClientSecret = null;
-                    m_isDirty = true;
-                }
-                else
-                {
-                    m_isDirty = !value.OrdinalEquals(m_defaultClientSecret,
-                                                    true);
-                }
-                m_defaultClientSecret = value;
-            }
-        }
-
-        public bool UseLegacyAppCredentials
-        {
-            get { return m_useLegacyCreds; }
-            set
-            {
-                if (m_useLegacyCreds != value)
-                {
-                    m_isDirty = true;
-                    m_useLegacyCreds = value;
-                }
             }
         }
 
@@ -490,9 +387,6 @@ namespace KPSyncForDrive
             const string ConfigAutoSyncKey = "GoogleSync.AutoSync";
             const string ConfigEnabledCmdsKey = "GoogleSync.EnabledCmds";
             const string ConfigDefaultAppFolderKey = "GoogleSync.DefaultAppFolder";
-            const string ConfigDriveScopeKey = "GoogleSync.DriveApiScope";
-            const string ConfigDefaultClientIdKey = "GoogleSync.DefaultClientId";
-            const string ConfigDefaultClientSecretKey = "GoogleSync.DefaultClientSecret";
             const string ConfigVersionKey = "GoogleSync.ConfigVersion";
             const string Ver0 = "0.0"; // virtual version
 
@@ -551,26 +445,6 @@ namespace KPSyncForDrive
             update.Folder = host.GetConfig(ConfigDefaultAppFolderKey,
                                             string.Empty);
             update.FolderColor = null;
-
-            update.LegacyDriveScope
-                = host.GetConfig(ConfigDriveScopeKey,
-                                    DriveService.Scope.Drive);
-
-            // Default is no OAuth 2.0 credentials.
-            update.PersonalClientId
-                = host.GetConfig(ConfigDefaultClientIdKey, string.Empty);
-            string secretVal
-                = host.GetConfig(ConfigDefaultClientSecretKey, string.Empty);
-            update.PersonalClientSecret
-                = string.IsNullOrEmpty(update.PersonalClientId) ?
-                    null : new ProtectedString(true, secretVal);
-
-            // If the user wants to enable legacy creds, there is nothing
-            // stopping her.  This is not a compatibility point.
-            update.UseLegacyAppCredentials
-                = host.GetConfig(SyncConfiguration.EntryUseLegacyCredsKey,
-                    false);
-
             return update;
         }
     }
