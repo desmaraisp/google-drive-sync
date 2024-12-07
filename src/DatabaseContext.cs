@@ -27,7 +27,7 @@ using KeePassLib.Serialization;
 
 namespace KPSyncForDrive
 {
-    class DatabaseContext
+    public class DatabaseContext
     {
         readonly PwDatabase m_db;
         readonly Guid m_uuid;
