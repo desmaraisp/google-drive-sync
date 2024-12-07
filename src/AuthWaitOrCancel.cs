@@ -25,7 +25,10 @@ using KeePass.Plugins;
 using KeePass.UI;
 using KeePass.Util;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using KeePass;
 
 namespace KPSyncForDrive
 {
@@ -67,6 +70,24 @@ namespace KPSyncForDrive
                                     GdsDefs.ProductName),
                 string.Format("{0} {1}", GdsDefs.ProductName, GdsDefs.Version));
         }
+        
+        public async Task<DialogResult> ShowDialogAsync(CancellationTokenSource cts)
+        {
+            FormClosing += (o, e) =>
+            {
+                cts.Cancel();
+            };
+            
+            if (Program.MainForm.InvokeRequired || InvokeRequired != Program.MainForm.InvokeRequired)
+            {
+                Log.Debug("Form not created or shown on UI thread - aborting.");
+                return DialogResult.Abort;
+            }
+
+            await Task.Yield();
+            return IsDisposed ? DialogResult.Cancel : ShowDialog();
+        }
+
 
         private void lnkHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
