@@ -1,0 +1,83 @@
+name: Publish artifacts on release
+
+on:
+  release: 
+    types: 
+      - published
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    permissions:
+      id-token: write
+      contents: write
+      attestations: write
+
+    steps:
+    - uses: actions/checkout@v3
+  
+    - uses: microsoft/setup-msbuild@v2
+
+    - name: publish
+      run: |
+        msbuild -t:restore,build -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
+          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
+          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}' `
+          -p:'CompileTimeConfig_PublicClientSecret=${{vars.PublicClientSecret }}' `
+          -p:'Version=${{github.event.release.name}}'
+
+        # The publish needs to be run separately, since the PLGX build task seems to not run on first build
+        msbuild -t:publish -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
+          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
+          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}' `
+          -p:'CompileTimeConfig_PublicClientSecret=${{vars.PublicClientSecret }}' `
+          -p:'Version=${{github.event.release.name}}'
+
+    - name: Create dist directory
+      run: mkdir ./dist
+
+    - name: Generate AutoUpdate file
+      run: |
+        "${{secrets.SIGNING_PRIVATEKEY_XML}}" | Set-Content .\lib\src\GenVerInfo\privateKey.xml -Force
+        msbuild -t:restore,build,publish -p:Configuration=Release .\lib\src\GenVerInfo\GenVerInfo.csproj
+        & ".\lib\src\GenVerInfo\bin\Release\net48\GenVerInfo.exe" "./src/bin/Any Cpu/Release/net48/publish/KPSyncForDrive.dll" ./dist/kpsync_final.txt
+
+    - name: zip results
+      shell: pwsh
+      run: |
+        move-item "./src/bin/Any Cpu/Release/net48/*.plgx" -Destination ./dist/KPSyncForDrive-${{github.event.release.name}}.plgx
+        Compress-Archive -Path "./src/bin/Any Cpu/Release/net48/publish/*" -DestinationPath ./dist/KPSyncForDrive-${{github.event.release.name}}.zip -CompressionLevel Optimal -Force
+        [System.IO.FileSystemInfo[]]$files = Get-ChildItem ./dist/
+        Write-Host "$($files.Count) files found in dist directory:"
+        $files
+
+    - name: Generate artifact attestation
+      uses: actions/attest-build-provenance@v1
+      with:
+        subject-path: './dist/*'
+
+    - uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs').promises;
+          await github.rest.repos.uploadReleaseAsset({
+            name: 'KPSyncForDrive-${{github.event.release.name}}.plgx',
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: ${{ github.event.release.id }},
+            data: await fs.readFile('./dist/KPSyncForDrive-${{github.event.release.name}}.plgx')
+          });
+          await github.rest.repos.uploadReleaseAsset({
+            name: 'KPSyncForDrive-${{github.event.release.name}}.zip',
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: ${{ github.event.release.id }},
+            data: await fs.readFile('./dist/KPSyncForDrive-${{github.event.release.name}}.zip')
+          });
+          await github.rest.repos.uploadReleaseAsset({
+            name: 'kpsync_final.txt',
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: ${{ github.event.release.id }},
+            data: await fs.readFile('./dist/kpsync_final.txt')
+          });
