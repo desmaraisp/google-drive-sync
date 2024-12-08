@@ -147,7 +147,6 @@ namespace KPSyncForDrive
 
 
             UpdateCheckEx.SetFileSigKey(UpdateUrl, Images.PubKey);
-
             m_host = host;
 
             PluginConfig appDefaults = PluginConfig.InitDefault(host);
