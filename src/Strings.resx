@@ -611,6 +611,10 @@ The local database could be out of sync with the Drive file.  Would you like to 
       <value>Use existing gDrive files:</value>
   </data>
   <data name="AuthorizeFiles_tooltip" xml:space="preserve">
-      <value>This plugin uses the restricted Drive.Files google scope. As such, it can only access files not created by itself if you explicitly give it access to those files, otherwise the plugin creates duplicate files at the target location</value>
+      <value>This plugin uses the restricted Drive.Files google scope. As such, it can only access files not created by itself if you explicitly give it access to those files. 
+Otherwise the plugin creates duplicate files at the target location</value>
+  </data>
+  <data name="AuthorizeFiles_sectionHeader" xml:space="preserve">
+      <value>Google Drive File Authorization</value>
   </data>
 </root>

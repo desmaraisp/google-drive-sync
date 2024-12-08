@@ -32,11 +32,7 @@
     <CompilerVisibleProperty Include="CompileTimeConfig_DriveFilePickerPublicApiKey" />
     <CompilerVisibleProperty Include="CompileTimeConfig_PublicClientSecret" />
   </ItemGroup>
-
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
-  </PropertyGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="2.8.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
@@ -62,34 +58,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="SavedAuthWarning.cs" />
-    <Compile Update="SavedAuthWarning.Designer.cs">
-      <DependentUpon>SavedAuthWarning.cs</DependentUpon>
-    </Compile>
-    <Compile Update="ConfigurationForm.cs" />
-    <Compile Update="ConfigurationForm.Designer.cs">
-      <DependentUpon>ConfigurationForm.cs</DependentUpon>
-    </Compile>
-    <Compile Update="AuthWaitOrCancel.cs" />
-    <Compile Update="AuthWaitOrCancel.Designer.cs">
-      <DependentUpon>AuthWaitOrCancel.cs</DependentUpon>
-    </Compile>
-    <Compile Update="AppCredsUpgrade.cs" />
-    <Compile Update="AppCredsUpgrade.Designer.cs">
-      <DependentUpon>AppCredsUpgrade.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Images.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Images.resx</DependentUpon>
-    </Compile>
-    <Compile Update="SharedFileError.cs" />
-    <Compile Update="SharedFileError.Designer.cs">
-      <DependentUpon>SharedFileError.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Update="SavedAuthWarning.resx">
       <DependentUpon>SavedAuthWarning.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -104,19 +72,21 @@
       <DependentUpon>AppCredsUpgrade.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="Images.resx">
-      <SubType>Designer</SubType>
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Images.Designer.cs</LastGenOutput>
-      <CustomToolNamespace>KPSyncForDrive</CustomToolNamespace>
+      <Generator>MSBuild:Compile</Generator>
+      <StronglyTypedFileName>$(IntermediateOutputPath)/Images.g.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedClassName>Images</StronglyTypedClassName>
+      <StronglyTypedNamespace>KPSyncForDrive</StronglyTypedNamespace>
     </EmbeddedResource>
     <EmbeddedResource Update="SharedFileError.resx">
       <DependentUpon>SharedFileError.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Update="Strings.es.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Update="Strings.resx">
-      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <StronglyTypedFileName>$(IntermediateOutputPath)/Strings.g.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>KPSyncForDrive</StronglyTypedNamespace>
+      <StronglyTypedClassname>Strings</StronglyTypedClassname>
     </EmbeddedResource>
   </ItemGroup>
 

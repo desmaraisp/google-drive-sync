@@ -597,4 +597,16 @@ Es posible que la base de datos local no esté sincronizada con el archivo de Dr
   <data name="Lnk_PrivacyPolicy" xml:space="preserve">
     <value>Política de privacidad</value>
   </data>
+  <data name="AuthorizeFiles_btn" xml:space="preserve">
+      <value>Autorizar</value>
+  </data>
+  <data name="AuthorizeFiles_label" xml:space="preserve">
+      <value>Utilice archivos gDrive existentes:</value>
+  </data>
+  <data name="AuthorizeFiles_tooltip" xml:space="preserve">
+      <value>Este complemento utiliza el alcance restringido de Google Drive.Files. Como tal, solo puede acceder a archivos no creados por sí mismo si usted le da acceso explícitamente a esos archivos; de lo contrario, el complemento crea archivos duplicados en la ubicación de destino.</value>
+  </data>
+  <data name="AuthorizeFiles_sectionHeader" xml:space="preserve">
+      <value>Autorización de archivos de Google Drive</value>
+  </data>
 </root>

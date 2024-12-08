@@ -84,11 +84,16 @@ namespace KPSyncForDrive
                 m_grpAuthTokenSecurity,
                 m_chkDontSaveAuthToken,
                 m_lnkAuthTokenHelp,
+                AuthorizeFiles_btn,
+                AuthorizeFiles_label
             };
             foreach (Control c in textCx)
             {
                 c.Text = Resources.GetString(c.Text);
             }
+
+            m_grpDriveAuth.Text = Strings.AuthorizeFiles_sectionHeader;
+            AuthorizeFiles_tooltip.SetToolTip(AuthorizeFiles_btn, Strings.AuthorizeFiles_tooltip);
 
             m_data = data;
 
