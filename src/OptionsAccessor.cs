@@ -13,5 +13,6 @@ namespace KPSyncForDrive
         public string PublicClientSecret { get; set; }
         public string DriveFilePickerPublicApiKey { get; set; }
         public string GoogleDrivePickerAppId { get; set; }
+        public string UpdateUrl { get; set; }
     }
 }

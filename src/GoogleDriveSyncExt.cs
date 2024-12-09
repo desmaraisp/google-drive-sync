@@ -111,7 +111,7 @@ namespace KPSyncForDrive
         {
             get
             {
-                return GdsDefs.UpdateUrl;
+                return _serviceProvider.GetRequiredService<ICompileTimeConfigAccessor<PluginStaticConfiguration>>().GetConfig().UpdateUrl;
             }
         }
 

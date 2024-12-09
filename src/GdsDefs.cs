@@ -21,7 +21,6 @@
 **/
 
 using KeePassLib.Security;
-using System;
 using System.Reflection;
 
 namespace KPSyncForDrive
@@ -81,15 +80,6 @@ namespace KPSyncForDrive
             }
         }
 
-        public static string UpdateUrl
-        {
-            get
-            {
-                return UrlUpdateFormat;
-            }
-        }
-
-        public const string GitHubProjectName = "google-drive-sync";
         public const string ConfigUUID = "GoogleSync.AccountUUID";
 
         public const string ConfigTrue = "TRUE";
@@ -102,7 +92,6 @@ namespace KPSyncForDrive
         public const string UrlHelp = UrlHome;
         public const string UrlGoogleDev = "https://console.developers.google.com/start";
         public const string UrlGoogleDrive = "https://drive.google.com";
-        public const string UrlUpdateFormat = "https://raw.githubusercontent.com/walterpg/"+ GitHubProjectName + "/master/kpsync_final.txt";
         public const string UrlSignInHelp = "https://developers.google.com/identity/sign-in/web/troubleshooting";
         public const string UrlSharedFileHelp = UrlHome + "/notices/sharedsec";
         public const string UrlPersonalAppCreds = UrlHome + "/usage/oauth";
