@@ -16,10 +16,7 @@ jobs:
 
     - name: publish
       run: |
-        msbuild -t:restore,build -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
-          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
-          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}' `
-          -p:'CompileTimeConfig_PublicClientSecret=${{vars.PublicClientSecret }}'
+        msbuild -t:restore,build -m -p:"Configuration=Release;Platform=Any Cpu" GoogleDriveSync.sln
 
         # The publish needs to be run separately, since the PLGX build task seems to not run on first build
         msbuild -t:publish -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
