@@ -146,7 +146,10 @@ namespace KPSyncForDrive
             _serviceProvider = serviceCollection.BuildServiceProvider();
 
 
-            UpdateCheckEx.SetFileSigKey(UpdateUrl, Images.PubKey);
+            UpdateCheckEx.SetFileSigKey(
+                UpdateUrl,
+                _serviceProvider.GetRequiredService<ICompileTimeConfigAccessor<PluginStaticConfiguration>>()
+                    .GetConfig().UpdateUrlPubKey);
             m_host = host;
 
             PluginConfig appDefaults = PluginConfig.InitDefault(host);

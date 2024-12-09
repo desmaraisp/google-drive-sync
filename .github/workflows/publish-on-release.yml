@@ -19,21 +19,20 @@ jobs:
     - uses: microsoft/setup-msbuild@v2
 
     - name: publish
+      env:
+        VersionNumber: ${{github.event.release.name}}
       run: |
-        msbuild -t:restore,build -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
-          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
-          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}' `
-          -p:'CompileTimeConfig_PublicClientSecret=${{vars.PublicClientSecret }}' `
-          -p:'Version=${{github.event.release.name}}' `
-          -p:'CompileTimeConfig_UpdateUrl=https://github.com/${{github.repository}}/releases/download/latest/kpsync_final.txt'
+        msbuild -t:restore,build -m -p:"Configuration=Release;Platform=Any Cpu" GoogleDriveSync.sln
 
         # The publish needs to be run separately, since the PLGX build task seems to not run on first build
         msbuild -t:publish -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
-          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
+          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' `
+          -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
           -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}' `
           -p:'CompileTimeConfig_PublicClientSecret=${{vars.PublicClientSecret }}' `
-          -p:'Version=${{github.event.release.name}}' `
-          -p:'CompileTimeConfig_UpdateUrl=https://github.com/${{github.repository}}/releases/download/latest/kpsync_final.txt'
+          -p:Version=$VersionNumber `
+          -p:'CompileTimeConfig_UpdateUrlPubKey=${{vars.UpdateUrlPubKey}}' `
+          -p:'CompileTimeConfig_UpdateUrl=https://github.com/${{github.repository}}/releases/latest/download/kpsync_final.txt'
 
     - name: Create dist directory
       run: mkdir ./dist
@@ -41,14 +40,16 @@ jobs:
     - name: Generate AutoUpdate file
       run: |
         "${{secrets.SIGNING_PRIVATEKEY_XML}}" | Set-Content .\lib\src\GenVerInfo\privateKey.xml -Force
-        msbuild -t:restore,build,publish -p:Configuration=Release .\lib\src\GenVerInfo\GenVerInfo.csproj
+        msbuild -t:publish -p:Configuration=Release .\lib\src\GenVerInfo\GenVerInfo.csproj
         & ".\lib\src\GenVerInfo\bin\Release\net48\GenVerInfo.exe" "./src/bin/Any Cpu/Release/net48/publish/KPSyncForDrive.dll" ./dist/kpsync_final.txt
 
     - name: zip results
       shell: pwsh
+      env: 
+        VersionNumber: ${{github.event.release.name}}
       run: |
-        move-item "./src/bin/Any Cpu/Release/net48/*.plgx" -Destination ./dist/KPSyncForDrive-${{github.event.release.name}}.plgx
-        Compress-Archive -Path "./src/bin/Any Cpu/Release/net48/publish/*" -DestinationPath ./dist/KPSyncForDrive-${{github.event.release.name}}.zip -CompressionLevel Optimal -Force
+        move-item "./src/bin/Any Cpu/Release/net48/*.plgx" -Destination ./dist/KPSyncForDrive-$VersionNumber.plgx
+        Compress-Archive -Path "./src/bin/Any Cpu/Release/net48/publish/*" -DestinationPath ./dist/KPSyncForDrive-$VersionNumber.zip -CompressionLevel Optimal -Force
         [System.IO.FileSystemInfo[]]$files = Get-ChildItem ./dist/
         Write-Host "$($files.Count) files found in dist directory:"
         $files
@@ -59,22 +60,25 @@ jobs:
         subject-path: './dist/*'
 
     - uses: actions/github-script@v6
+      env:
+        ReleaseName: ${{github.event.release.name}}
       with:
         script: |
+          const { ReleaseName } = process.env
           const fs = require('fs').promises;
           await github.rest.repos.uploadReleaseAsset({
-            name: 'KPSyncForDrive-${{github.event.release.name}}.plgx',
+            name: `KPSyncForDrive-${ReleaseName}.plgx`,
             owner: context.repo.owner,
             repo: context.repo.repo,
             release_id: ${{ github.event.release.id }},
-            data: await fs.readFile('./dist/KPSyncForDrive-${{github.event.release.name}}.plgx')
+            data: await fs.readFile(`./dist/KPSyncForDrive-${ReleaseName}.plgx`)
           });
           await github.rest.repos.uploadReleaseAsset({
-            name: 'KPSyncForDrive-${{github.event.release.name}}.zip',
+            name: `KPSyncForDrive-${ReleaseName}.zip`,
             owner: context.repo.owner,
             repo: context.repo.repo,
             release_id: ${{ github.event.release.id }},
-            data: await fs.readFile('./dist/KPSyncForDrive-${{github.event.release.name}}.zip')
+            data: await fs.readFile(`./dist/KPSyncForDrive-${ReleaseName}.zip`)
           });
           await github.rest.repos.uploadReleaseAsset({
             name: 'kpsync_final.txt',

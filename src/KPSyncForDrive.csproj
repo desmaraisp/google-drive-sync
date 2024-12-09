@@ -19,6 +19,7 @@
     <CompileTimeConfig_DriveFilePickerPublicApiKey>DevPublicApiKey</CompileTimeConfig_DriveFilePickerPublicApiKey>
     <CompileTimeConfig_GoogleDrivePickerAppId>DevAppId</CompileTimeConfig_GoogleDrivePickerAppId>
     <CompileTimeConfig_PublicClientSecret>DevClientSecret</CompileTimeConfig_PublicClientSecret>
+    <CompileTimeConfig_UpdateUrl>https://github.com/YourFork/google-drive-sync/releases/latest/download/kpsync_final.txt</CompileTimeConfig_UpdateUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +27,8 @@
     <CompilerVisibleProperty Include="CompileTimeConfig_GoogleDrivePickerAppId" />
     <CompilerVisibleProperty Include="CompileTimeConfig_DriveFilePickerPublicApiKey" />
     <CompilerVisibleProperty Include="CompileTimeConfig_PublicClientSecret" />
+    <CompilerVisibleProperty Include="CompileTimeConfig_UpdateUrl" />
+    <CompilerVisibleProperty Include="CompileTimeConfig_UpdateUrlPubKey" />
   </ItemGroup>
   
   <ItemGroup>
