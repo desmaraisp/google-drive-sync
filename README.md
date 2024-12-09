@@ -4,7 +4,7 @@
 
 ---
 Download the current release using the link above. If you are upgrading from an Alpha release (v4.0.0 or v4.0.1), you should
-[review the upgrade notes](https://www.kpsync.org/install/upgrade0).
+[review the upgrade notes](https://www.kpsync.org/install/upgrade0). 
 
 If you are replacing Google Sync Plugin 3.0, or authorize Drive access with Google Sync Plugin 3.0's built-in
 OAuth credentials, you may want to
