@@ -14,7 +14,7 @@
     <TransformOnBuild>true</TransformOnBuild>
     <TransformOutOfDateOnly>true</TransformOutOfDateOnly>
     <Satellite_ProductName>KeePass Plugin Satellite Resources</Satellite_ProductName>
-    <PlgxTargetKpVersion>2.35</PlgxTargetKpVersion>
+    <KeepassHintPath>..\lib\bin\KeePass-windows.exe</KeepassHintPath>
     <CompileTimeConfig_ClientId>DevClientId</CompileTimeConfig_ClientId>
     <CompileTimeConfig_DriveFilePickerPublicApiKey>DevPublicApiKey</CompileTimeConfig_DriveFilePickerPublicApiKey>
     <CompileTimeConfig_GoogleDrivePickerAppId>DevAppId</CompileTimeConfig_GoogleDrivePickerAppId>
@@ -44,11 +44,10 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Net.Http" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3601" />
-    <PackageReference Include="PlgxBuildTasks" Version="1.1.1-beta" />
     <PackageReference Include="Serilog" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <Reference Include="KeePass.exe">
-      <HintPath>..\lib\bin\KeePass.exe</HintPath>
+      <HintPath>$(KeepassHintPath)</HintPath>
       <Private>False</Private>
     </Reference>
     <!-- Before upgrading check Google.Apis.* dependency. -->
@@ -87,21 +86,4 @@
       <StronglyTypedClassname>Strings</StronglyTypedClassname>
     </EmbeddedResource>
   </ItemGroup>
-
-  <!-- ===== This is for PlgxBuildTasks dev building, etc. Remove <PackageReference> above. =====
-  <Import Project="..\..\plgx-build-tasks\PlgxBuild\PlgxBuildTasks.targets" />
-  <PropertyGroup>
-    <GeneratePlgx>true</GeneratePlgx>
-    <PlgxBuildTasksDir>..\..\plgx-build-tasks\PlgxBuild\bin\Debug\netstandard2.0\</PlgxBuildTasksDir>
-  </PropertyGroup>
-  -->
-
-  <!-- Embed version number in .PLGX name-->
-  <Target Name="KpSyncSetPlgxFileName" BeforeTargets="SetPlgxOutputPath"
-    Outputs="PlgxArchiveFileName">
-    <PropertyGroup>
-      <PlgxArchiveFileName>$(AssemblyName)-$(Version)</PlgxArchiveFileName>
-    </PropertyGroup>
-  </Target>
-
 </Project>
