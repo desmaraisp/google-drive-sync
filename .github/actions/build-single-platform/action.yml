@@ -14,25 +14,45 @@ inputs:
     description: 'The output name for the build artifacts'
     required: true
 
+  GCPCLIENTID:
+    description: 'Google Cloud Platform Client ID for the application'
+    required: true
+
+  GDRIVEAPPID:
+    description: 'Google Drive Picker App ID for the application'
+    required: true
+
+  GDRIVEFILEPICKERAPIKEY:
+    description: 'Google Drive File Picker Public API Key for the application'
+    required: true
+
+  PublicClientSecret:
+    description: 'Public Client Secret for the application'
+    required: true
+
+  UpdateUrlPubKey:
+    description: 'Public Key for the Update URL'
+    required: true
+
+
 runs:
   using: "composite"
   steps:
     - name: publish-windows
       shell: pwsh
       run: |
-        msbuild -t:publish -m .\src\KPSyncForDrive.csproj `
-          -p:'Configuration=Release;Platform=Any Cpu' ` 
-          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' `
-          -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
-          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}' `
-          -p:'CompileTimeConfig_PublicClientSecret=${{vars.PublicClientSecret }}' `
+        msbuild -t:publish -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
+          -p:'CompileTimeConfig_ClientId=${{inputs.GCPCLIENTID}}' `
+          -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{inputs.GDRIVEAPPID}}' `
+          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{inputs.GDRIVEFILEPICKERAPIKEY}}' `
+          -p:'CompileTimeConfig_PublicClientSecret=${{inputs.PublicClientSecret }}' `
           -p:'Version=${{inputs.version-number}}' `
-          -p:'CompileTimeConfig_UpdateUrlPubKey=${{vars.UpdateUrlPubKey}}' `
-          -p:'CompileTimeConfig_UpdateUrl=https://github.com/${{github.repository}}/releases/latest/download/kpsync_final.txt'
-          -p:'OutputPath=./out/${{inputs.output-directory}}' `
+          -p:'CompileTimeConfig_UpdateUrlPubKey=${{inputs.UpdateUrlPubKey}}' `
+          -p:'CompileTimeConfig_UpdateUrl=https://github.com/${{github.repository}}/releases/latest/download/kpsync_final.txt' `
+          -p:'OutputPath=../out/${{inputs.output-name}}/' `
           -p:'KeepassHintPath=${{inputs.keepass-location}}'
 
     - name: Compress results
       shell: pwsh
       run: |
-        Compress-Archive -Path "./out/${{inputs.output-directory}}" -DestinationPath ./dist/KPSyncForDrive-${{inputs.output-directory}}-${{inputs.version-number}}.zip -CompressionLevel Optimal -Force
+        Compress-Archive -Path "./out/${{inputs.output-name}}/*" -DestinationPath ./dist/KPSyncForDrive-${{inputs.output-name}}-${{inputs.version-number}}.zip -CompressionLevel Optimal -Force
