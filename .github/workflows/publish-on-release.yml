@@ -16,25 +16,18 @@ jobs:
     steps:
     - uses: actions/checkout@v3
   
-    - uses: microsoft/setup-msbuild@v2
+    - name: build artifacts
+      uses: ./.github/actions/build-artifact
+      with:
+        version-number: ${{ github.event.release.name }}
 
-    - name: publish
-      env:
-        VersionNumber: ${{github.event.release.name}}
+    - name: List files in dist directory
+      # This step is to verify that the files are created correctly
+      shell: pwsh
       run: |
-        msbuild -t:restore,build -m -p:"Configuration=Release;Platform=Any Cpu" GoogleDriveSync.sln
-
-        msbuild -t:publish -m -p:"Configuration=Release;Platform=Any Cpu" .\src\KPSyncForDrive.csproj `
-          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' `
-          -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
-          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}' `
-          -p:'CompileTimeConfig_PublicClientSecret=${{vars.PublicClientSecret }}' `
-          -p:Version=$Env:VersionNumber `
-          -p:'CompileTimeConfig_UpdateUrlPubKey=${{vars.UpdateUrlPubKey}}' `
-          -p:'CompileTimeConfig_UpdateUrl=https://github.com/${{github.repository}}/releases/latest/download/kpsync_final.txt'
-
-    - name: Create dist directory
-      run: mkdir ./dist
+        [System.IO.FileSystemInfo[]]$files = Get-ChildItem ./dist/
+        Write-Host "$($files.Count) files found in dist directory:"
+        $files
 
     - name: Generate AutoUpdate file
       run: |
@@ -42,39 +35,23 @@ jobs:
         msbuild -t:publish -p:Configuration=Release .\lib\src\GenVerInfo\GenVerInfo.csproj
         & ".\lib\src\GenVerInfo\bin\Release\net48\GenVerInfo.exe" "./src/bin/Any Cpu/Release/net48/publish/KPSyncForDrive.dll" ./dist/kpsync_final.txt
 
-    - name: zip results
-      shell: pwsh
-      env: 
-        VersionNumber: ${{github.event.release.name}}
-      run: |
-        Compress-Archive -Path "./src/bin/Any Cpu/Release/net48/publish/*" -DestinationPath ./dist/KPSyncForDrive-$Env:VersionNumber.zip -CompressionLevel Optimal -Force
-        [System.IO.FileSystemInfo[]]$files = Get-ChildItem ./dist/
-        Write-Host "$($files.Count) files found in dist directory:"
-        $files
-
     - name: Generate artifact attestation
       uses: actions/attest-build-provenance@v1
       with:
         subject-path: './dist/*'
 
     - uses: actions/github-script@v6
-      env:
-        ReleaseName: ${{github.event.release.name}}
       with:
         script: |
-          const { ReleaseName } = process.env
           const fs = require('fs').promises;
-          await github.rest.repos.uploadReleaseAsset({
-            name: `KPSyncForDrive-${ReleaseName}.zip`,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            release_id: ${{ github.event.release.id }},
-            data: await fs.readFile(`./dist/KPSyncForDrive-${ReleaseName}.zip`)
-          });
-          await github.rest.repos.uploadReleaseAsset({
-            name: 'kpsync_final.txt',
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            release_id: ${{ github.event.release.id }},
-            data: await fs.readFile('./dist/kpsync_final.txt')
-          });
+
+          const files = await fs.readdir('./dist');
+          for (const file of files) {
+            await github.rest.repos.uploadReleaseAsset({
+              name: file,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: ${{ github.event.release.id }},
+              data: await fs.readFile(`./dist/${file}`)
+            });
+          }
