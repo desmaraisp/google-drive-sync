@@ -37,6 +37,7 @@ namespace KPSyncForDrive.WindowsControls
 
         static int? s_dpiX, s_dpiY;
 
+#if WINDOWS
         [DllImport("user32.dll")]
         static extern IntPtr GetDC(HandleRef hWnd);
 
@@ -64,6 +65,9 @@ namespace KPSyncForDrive.WindowsControls
                 }
             }
         }
+#else
+        static void EnsureDpi() { }
+#endif
 
         public static SizeF Dpi
         {

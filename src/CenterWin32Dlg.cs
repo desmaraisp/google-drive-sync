@@ -48,6 +48,7 @@ namespace KPSyncForDrive
             public int Bottom;      // y position of lower-right corner
         }
 
+#if WINDOWS
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool EnumThreadWindows(uint dwThreadId,
@@ -67,7 +68,7 @@ namespace KPSyncForDrive
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool MoveWindow(IntPtr hWnd, int X, int Y,
             int nWidth, int nHeight, bool bRepaint);
-
+#endif
 
         readonly Form m_owner;
         int m_tries;
@@ -80,7 +81,7 @@ namespace KPSyncForDrive
             m_disposed = false;
             m_owner.BeginInvoke(new MethodInvoker(DlgSearch));
         }
-
+#if WINDOWS
         bool FixWindowIfWinDlg(IntPtr hWnd, IntPtr lp)
         {
             int classNameSize = MaxlpszClassName + IntPtr.Size;
@@ -118,6 +119,7 @@ namespace KPSyncForDrive
                 Debug.WriteLine("MoveWindow Failed!");
             }
         }
+#endif
 
         void DlgSearch()
         {
@@ -127,12 +129,14 @@ namespace KPSyncForDrive
             {
                 return;
             }
+#if WINDOWS
             if (EnumThreadWindows(GetCurrentThreadId(), FixWindowIfWinDlg,
                                     IntPtr.Zero) &&
                 m_tries++ < 10)
             {
                 m_owner.BeginInvoke(new MethodInvoker(DlgSearch));
             }
+#endif
         }
 
         protected virtual void Dispose(bool bIsDisposing)

@@ -15,6 +15,8 @@
     <TransformOutOfDateOnly>true</TransformOutOfDateOnly>
     <Satellite_ProductName>KeePass Plugin Satellite Resources</Satellite_ProductName>
     <KeepassHintPath>..\lib\bin\KeePass-windows.exe</KeepassHintPath>
+    <TargetPlatform>win</TargetPlatform>
+    <DefineConstants Condition="'$(TargetPlatform)'=='win'">WINDOWS</DefineConstants>
     <CompileTimeConfig_ClientId>DevClientId</CompileTimeConfig_ClientId>
     <CompileTimeConfig_DriveFilePickerPublicApiKey>DevPublicApiKey</CompileTimeConfig_DriveFilePickerPublicApiKey>
     <CompileTimeConfig_GoogleDrivePickerAppId>DevAppId</CompileTimeConfig_GoogleDrivePickerAppId>
