@@ -50,7 +50,8 @@ runs:
           -p:'CompileTimeConfig_UpdateUrlPubKey=${{inputs.UpdateUrlPubKey}}' `
           -p:'CompileTimeConfig_UpdateUrl=https://github.com/${{github.repository}}/releases/latest/download/kpsync_final.txt' `
           -p:'OutputPath=../out/${{inputs.output-name}}/' `
-          -p:'KeepassHintPath=${{inputs.keepass-location}}'
+          -p:'KeepassHintPath=${{inputs.keepass-location}}' `
+          -p:'TargetPlatform=${{inputs.output-name}}'
 
     - name: Compress results
       shell: pwsh
