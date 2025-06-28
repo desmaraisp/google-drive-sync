@@ -1,0 +1,38 @@
+name: 'Build Artifact'
+
+description: 'Builds the plugin artifact'
+inputs:
+  version-number:
+    description: 'The version number to use for the build'
+    required: true
+
+  keepass-location:
+    description: 'The location of the KeePass executable to use for the build'
+    required: true
+
+  output-name:
+    description: 'The output name for the build artifacts'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: publish-windows
+      shell: pwsh
+      run: |
+        msbuild -t:publish -m .\src\KPSyncForDrive.csproj `
+          -p:'Configuration=Release;Platform=Any Cpu' ` 
+          -p:'CompileTimeConfig_ClientId=${{vars.GCPCLIENTID}}' `
+          -p:'CompileTimeConfig_GoogleDrivePickerAppId=${{vars.GDRIVEAPPID}}' `
+          -p:'CompileTimeConfig_DriveFilePickerPublicApiKey=${{vars.GDRIVEFILEPICKERAPIKEY}}' `
+          -p:'CompileTimeConfig_PublicClientSecret=${{vars.PublicClientSecret }}' `
+          -p:'Version=${{inputs.version-number}}' `
+          -p:'CompileTimeConfig_UpdateUrlPubKey=${{vars.UpdateUrlPubKey}}' `
+          -p:'CompileTimeConfig_UpdateUrl=https://github.com/${{github.repository}}/releases/latest/download/kpsync_final.txt'
+          -p:'OutputPath=./out/${{inputs.output-directory}}' `
+          -p:'KeepassHintPath=${{inputs.keepass-location}}'
+
+    - name: Compress results
+      shell: pwsh
+      run: |
+        Compress-Archive -Path "./out/${{inputs.output-directory}}" -DestinationPath ./dist/KPSyncForDrive-${{inputs.output-directory}}-${{inputs.version-number}}.zip -CompressionLevel Optimal -Force
