@@ -20,6 +20,12 @@ jobs:
       uses: ./.github/actions/build-artifact
       with:
         version-number: ${{ github.event.release.name }}
+        GCPCLIENTID: ${{vars.GCPCLIENTID}}
+        GDRIVEAPPID: ${{vars.GDRIVEAPPID}}
+        GDRIVEFILEPICKERAPIKEY: ${{vars.GDRIVEFILEPICKERAPIKEY}}
+        PublicClientSecret: ${{vars.PublicClientSecret}}
+        UpdateUrlPubKey: ${{vars.UpdateUrlPubKey}}
+
 
     - name: List files in dist directory
       # This step is to verify that the files are created correctly

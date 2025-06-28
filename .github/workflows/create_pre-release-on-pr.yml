@@ -14,6 +14,13 @@ jobs:
   
     - name: build artifacts
       uses: ./.github/actions/build-artifact
+      with:
+        GCPCLIENTID: ${{vars.GCPCLIENTID}}
+        GDRIVEAPPID: ${{vars.GDRIVEAPPID}}
+        GDRIVEFILEPICKERAPIKEY: ${{vars.GDRIVEFILEPICKERAPIKEY}}
+        PublicClientSecret: ${{vars.PublicClientSecret}}
+        UpdateUrlPubKey: ${{vars.UpdateUrlPubKey}}
+
 
     - name: List files in dist directory
       # This step is to verify that the files are created correctly
@@ -29,7 +36,7 @@ jobs:
       with:
         name: zip-artifact
         retention-days: 15
-        path: ./dist/*.zip
+        path: ./dist/**.zip
         if-no-files-found: error
 
     - uses: actions/github-script@v6

@@ -7,6 +7,27 @@ inputs:
     required: true
     default: '0.0.0'
 
+  GCPCLIENTID:
+    description: 'Google Cloud Platform Client ID for the application'
+    required: true
+
+  GDRIVEAPPID:
+    description: 'Google Drive Picker App ID for the application'
+    required: true
+
+  GDRIVEFILEPICKERAPIKEY:
+    description: 'Google Drive File Picker Public API Key for the application'
+    required: true
+
+  PublicClientSecret:
+    description: 'Public Client Secret for the application'
+    required: true
+
+  UpdateUrlPubKey:
+    description: 'Public Key for the Update URL'
+    required: true
+
+
 runs:
   using: "composite"
   steps:
@@ -26,13 +47,23 @@ runs:
     - name: publish-windows
       uses: ./.github/actions/build-single-platform
       with:
-        version-number: ${inputs.version-number}
+        version-number: ${{inputs.version-number}}
         keepass-location: ../lib/bin/KeePass-windows.exe
         output-name: win
+        GCPCLIENTID: ${{inputs.GCPCLIENTID}}
+        GDRIVEAPPID: ${{inputs.GDRIVEAPPID}}
+        GDRIVEFILEPICKERAPIKEY: ${{inputs.GDRIVEFILEPICKERAPIKEY}}
+        PublicClientSecret: ${{inputs.PublicClientSecret}}
+        UpdateUrlPubKey: ${{inputs.UpdateUrlPubKey}}
 
     - name: publish-linux
       uses: ./.github/actions/build-single-platform
       with:
-        version-number: ${inputs.version-number}
+        version-number: ${{inputs.version-number}}
         keepass-location: ../lib/bin/KeePass-2.47-ubuntu.exe
         output-name: linux
+        GCPCLIENTID: ${{inputs.GCPCLIENTID}}
+        GDRIVEAPPID: ${{inputs.GDRIVEAPPID}}
+        GDRIVEFILEPICKERAPIKEY: ${{inputs.GDRIVEFILEPICKERAPIKEY}}
+        PublicClientSecret: ${{inputs.PublicClientSecret}}
+        UpdateUrlPubKey: ${{inputs.UpdateUrlPubKey}}
