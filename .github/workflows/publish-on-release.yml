@@ -39,7 +39,7 @@ jobs:
       run: |
         "${{secrets.SIGNING_PRIVATEKEY_XML}}" | Set-Content .\lib\src\GenVerInfo\privateKey.xml -Force
         msbuild -t:publish -p:Configuration=Release .\lib\src\GenVerInfo\GenVerInfo.csproj
-        & ".\lib\src\GenVerInfo\bin\Release\net48\GenVerInfo.exe" "./src/bin/Any Cpu/Release/net48/publish/KPSyncForDrive.dll" ./dist/kpsync_final.txt
+        & ".\lib\src\GenVerInfo\bin\Release\net48\GenVerInfo.exe" "./out/win/publish/KPSyncForDrive.dll" ./dist/kpsync_final.txt
 
     - name: Generate artifact attestation
       uses: actions/attest-build-provenance@v1
