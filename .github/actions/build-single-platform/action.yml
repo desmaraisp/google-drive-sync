@@ -55,4 +55,4 @@ runs:
     - name: Compress results
       shell: pwsh
       run: |
-        Compress-Archive -Path "./out/${{inputs.output-name}}/*" -DestinationPath ./dist/KPSyncForDrive-${{inputs.output-name}}-${{inputs.version-number}}.zip -CompressionLevel Optimal -Force
+        Compress-Archive -Path "./out/${{inputs.output-name}}/publish/*" -DestinationPath ./dist/KPSyncForDrive-${{inputs.output-name}}-${{inputs.version-number}}.zip -CompressionLevel Optimal -Force
