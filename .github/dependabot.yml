@@ -17,3 +17,6 @@ updates:
     directory: "/"
     patterns: ["*"]
     multi-ecosystem-group: "all-dependencies"
+    ignore:
+      - dependency-name: "Microsoft.CodeAnalysis.Analyzers"
+      - dependency-name: "Serilog"
