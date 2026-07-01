@@ -35,7 +35,7 @@
   
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
     <ProjectReference Include="..\lib\src\CompileTimeConfigPublicMembers\CompileTimeConfigPublicMembers.csproj" />
     <ProjectReference OutputItemType="Analyzer" ReferenceOutputAssembly="false" Include="..\lib\src\CompileTimeConfigGenerator\CompileTimeConfigGenerator.csproj" />
     <ProjectReference Include="..\lib\src\FilePicker\FilePicker.csproj" />
@@ -43,7 +43,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Net.Http" />
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.74.0.4135" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.75.0.4192" />
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <Reference Include="KeePass.exe">
